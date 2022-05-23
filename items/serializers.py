@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Collection, Item, ItemImage
+from .models import Collection, Item, ItemImage, ItemColor
 
 
 class CollectionGetSerializer(serializers.ModelSerializer):
@@ -70,8 +70,16 @@ class ImageItemSerializer(serializers.ModelSerializer):
             return None
 
 
+class ItemColorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ItemColor
+        fields = '__all__'
+
+
 class ItemCreateSerializer(serializers.ModelSerializer):
     itemimage = ImageItemSerializer(many=True, read_only=True)
+    itemcolor = ItemColorSerializer(many=True, read_only=True)
 
     class Meta:
         model = Item
@@ -79,7 +87,7 @@ class ItemCreateSerializer(serializers.ModelSerializer):
                   'old_price', 'new_price',
                   'description', 'size_range',
                   'amount_in',
-                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection'
+                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection', 'itemcolor'
                   )
 
     def create(self, validated_data):
@@ -102,6 +110,7 @@ class ItemCreateSerializer(serializers.ModelSerializer):
 
 class ItemsListSerializer(serializers.ModelSerializer):
     itemimage = ImageItemSerializer(many=True, read_only=True)
+    itemcolor = ItemColorSerializer(many=True, read_only=True)
     collection = CollectionGetSerializer()
 
     class Meta:
@@ -113,6 +122,7 @@ class ItemsListSerializer(serializers.ModelSerializer):
             'itemimage',
             'collection',
             'size_range',
+            'itemcolor',
         )
         read_only_fields = ('id',)
 

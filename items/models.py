@@ -1,3 +1,4 @@
+from colorfield.fields import ColorField
 from django.db import models
 
 
@@ -38,7 +39,15 @@ class ItemImage(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='itemimage')
     image = models.ImageField(upload_to='item')
 
-
     class Meta:
         verbose_name = "фотографии товара"
         verbose_name_plural = "фотографии товара"
+
+
+class ItemColor(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='itemcolor')
+    custom_color = ColorField(default='#FF0000', verbose_name="Цвет")
+
+    class Meta:
+        verbose_name = "цвет товара"
+        verbose_name_plural = "цвет товара"
