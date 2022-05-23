@@ -16,8 +16,8 @@ class Collection(models.Model):
 class Item(models.Model):
     title = models.CharField(max_length=100, verbose_name='Описание товара')
     item_id = models.CharField(max_length=200, unique=True, verbose_name='Артикул', blank=True, null=True)
-    old_price = models.PositiveIntegerField('Цена', default=0)
-    new_price = models.PositiveIntegerField('Цена', default=0)
+    old_price = models.PositiveIntegerField('старая Цена', default=0)
+    new_price = models.PositiveIntegerField('новая Цена', default=0)
     description = models.TextField(verbose_name='О Товаре')
     size_range = models.CharField(max_length=20, verbose_name='размерный ряд')
     amount_in = models.PositiveIntegerField('количество в линейке', default=0)
@@ -37,3 +37,8 @@ class Item(models.Model):
 class ItemImage(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='itemimage')
     image = models.ImageField(upload_to='item')
+
+
+    class Meta:
+        verbose_name = "фотографии товара"
+        verbose_name_plural = "фотографии товара"
