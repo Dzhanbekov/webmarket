@@ -20,6 +20,7 @@ class ColorAdmin(admin.StackedInline):
     model = ItemColor
 
 
+@admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     inlines = [PhotoAdmin, ColorAdmin]
     form = ItemAdminForm
@@ -29,6 +30,5 @@ class ItemAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Collection)
-admin.site.register(Item, ItemAdmin)
 # admin.site.register(ItemImage)
 # admin.site.register(ItemColor)
