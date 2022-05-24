@@ -126,3 +126,25 @@ class ItemsListSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id',)
 
+
+class ItemsDetailSerializer(serializers.ModelSerializer):
+    itemimage = ImageItemSerializer(many=True, read_only=True)
+    itemcolor = ItemColorSerializer(many=True, read_only=True)
+    collection = CollectionGetSerializer()
+
+    class Meta:
+        model = Item
+        fields = (
+            'title',
+            'item_id',
+            'itemcolor',
+            'new_price',
+            'old_price',
+            'description',
+            'size_range',
+            'material',
+            'compound',
+            'amount_in',
+            'itemimage',
+            'collection',
+        )
