@@ -42,7 +42,7 @@ class Help(models.Model):
 
 
 class Offer(models.Model):
-    title = models.CharField(max_length=200, verbose_name='Заголовок')
+    title = models.CharField(max_length=200, verbose_name='Заголовок', default='Публичная оферта')
     text = models.TextField()
 
     def __str__(self):
