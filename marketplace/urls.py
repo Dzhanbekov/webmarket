@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/item/', include('items.urls')),
     path('api/v1/info/', include('info.urls')),
+    path('ckeditor/', include('ckeditor_uploader.urls')),
 
     #swagger
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
