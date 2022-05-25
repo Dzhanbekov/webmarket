@@ -84,7 +84,7 @@ class ItemCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
         fields = ('id', 'title', 'item_id',
-                  'old_price', 'new_price',
+                  'basic_price', 'price',
                   'description', 'size_range',
                   'amount_in',
                   'compound', 'material', 'is_in_cart', 'itemimage', 'collection', 'itemcolor'
@@ -97,8 +97,8 @@ class ItemCreateSerializer(serializers.ModelSerializer):
         instance.item_id = validated_data.get('item_id', instance.item_id)
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
-        instance.price = validated_data.get('old_price', instance.old_price)
-        instance.new_price = validated_data.get('new_price', instance.new_price)
+        instance.price = validated_data.get('basic_price', instance.old_price)
+        instance.new_price = validated_data.get('price', instance.new_price)
         instance.collection = validated_data.get('collection', instance.collection)
         instance.material = validated_data.get('material', instance.material)
         instance.compound = validated_data.get('compound', instance.compound)
@@ -118,7 +118,8 @@ class ItemsListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
-            'new_price',
+            'basic_price',
+            'price',
             'itemimage',
             'collection',
             'size_range',
@@ -138,8 +139,8 @@ class ItemsDetailSerializer(serializers.ModelSerializer):
             'title',
             'item_id',
             'itemcolor',
-            'new_price',
-            'old_price',
+            'price',
+            'basic_price',
             'description',
             'size_range',
             'material',

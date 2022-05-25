@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'colorfield',
     'ckeditor',
     'ckeditor_uploader',
-
+    'phonenumber_field',
 
 ]
 
