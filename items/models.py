@@ -27,7 +27,7 @@ class Item(models.Model):
     compound = models.CharField(max_length=200, verbose_name='Состав Ткани')
     material = models.CharField(max_length=200, verbose_name='Материал')
     is_in_cart = models.BooleanField(default=False)
-    collection = models.ForeignKey(Collection, models.CASCADE, verbose_name='Коллекция')
+    collection = models.ForeignKey(Collection, models.CASCADE, verbose_name='Коллекция', related_name='itemcollection')
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
@@ -84,7 +84,7 @@ class Order(models.Model):
         verbose_name_plural = "Заказы"
 
 
-class OrderItem(models.Model):
+class ItemCart(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="order_item", verbose_name="Продукт")
     amount = models.PositiveIntegerField(default=1, verbose_name="Количество")
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_item", verbose_name="Заказ")
@@ -96,7 +96,7 @@ class OrderItem(models.Model):
             self.price = self.item.price * self.amount
         else:
             self.price = self.item.basic_price * self.amount
-        super(OrderItem, self).save()
+        super(ItemCart, self).save()
 
     def __str__(self):
         return f'{self.item}:{self.amount} - {self.item.price * self.amount}'
