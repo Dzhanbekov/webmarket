@@ -4,11 +4,13 @@ Django==4.0.4
 django-ckeditor==6.4.1
 django-colorfield==0.7.0
 django-js-asset==2.0.0
+django-phonenumber-field==6.1.0
 djangorestframework==3.13.1
 drf-spectacular==0.22.1
 drf-spectacular-sidecar==2022.5.1
 inflection==0.5.1
 jsonschema==4.5.1
+phonenumbers==8.12.48
 Pillow==9.1.1
 psycopg2-binary==2.9.3
 pyrsistent==0.18.1

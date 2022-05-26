@@ -1,4 +1,4 @@
-from .models import Collection, Item, ItemImage, ItemColor, OrderItem, Order
+from .models import Collection, Item, ItemImage, ItemColor, ItemCart, Order
 from django import forms
 from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
@@ -31,4 +31,4 @@ class ItemAdmin(admin.ModelAdmin):
 
 admin.site.register(Collection)
 admin.site.register(Order)
-admin.site.register(OrderItem)
+admin.site.register(ItemCart)

@@ -1,5 +1,7 @@
+from django.contrib.auth import get_user_model
+from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
-from .models import Collection, Item, ItemImage, ItemColor
+from .models import Collection, Item, ItemImage, ItemColor, ItemCart, Order
 
 
 class CollectionGetSerializer(serializers.ModelSerializer):
@@ -34,23 +36,6 @@ class CollectionCreateSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get('image', instance.image)
         instance.save()
         return instance
-
-
-# class ItemImageSerializer(serializers.ModelSerializer):
-#     image_url = serializers.SerializerMethodField()
-#
-#     class Meta:
-#         model = ItemImage
-#         fields = ('id', 'image_url', 'item')
-#
-#     def get_image_url(self, obj):
-#         try:
-#             request = self.context.get('context')
-#             image_url = obj.image.path
-#             print(self.context.get('context'))
-#             return request.build_absolute_uri(image_url)
-#         except ValueError:
-#             return None
 
 
 class ImageItemSerializer(serializers.ModelSerializer):
@@ -120,6 +105,7 @@ class ItemsListSerializer(serializers.ModelSerializer):
             'title',
             'basic_price',
             'price',
+            'discount',
             'itemimage',
             'collection',
             'size_range',
@@ -149,3 +135,77 @@ class ItemsDetailSerializer(serializers.ModelSerializer):
             'itemimage',
             'collection',
         )
+
+
+class OrderItemAmountSerializer(serializers.ModelSerializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all())
+
+    class Meta:
+        model = ItemCart
+        fields = (
+            'item',
+            'amount'
+        )
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    order_item = OrderItemAmountSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = (
+            'id',
+            'created_at',
+            'firstname',
+            'lastname',
+            'email',
+            'phone_number',
+            'country',
+            'city',
+            'order_item',
+        )
+
+
+class ItemAmountSerializer(serializers.ModelSerializer):
+    item = ItemCreateSerializer()
+
+    class Meta:
+        model = ItemCart
+        fields = (
+            'item',
+            'amount'
+        )
+
+
+class OrderUserSerializer(serializers.ModelSerializer):
+    firstname = serializers.CharField(required=True)
+    phone_number = PhoneNumberField(required=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            'first_name',
+            'phone_number'
+        )
+
+
+class OrderCreateReviewSerializer(serializers.ModelSerializer):
+    user = OrderUserSerializer(required=False)
+
+    class Meta:
+        model = Order
+        fields = (
+
+            'firstname',
+            'lastname',
+            'email',
+            'phone_number',
+            'country',
+            'city',
+            'order_item',
+        )
+        read_only_fields = (
+            'id',
+            'created_at',
+        )
+
