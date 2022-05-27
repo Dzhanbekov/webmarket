@@ -1,6 +1,6 @@
 from django.urls import path, include
 from .views import AboutUsViewSet, NewsViewSet, OfferViewSet, HelpViewSet, \
-    ContactViewSet, AdvantagesViewSet, MainPageViewSet
+    ContactViewSet, AdvantagesViewSet, MainPageViewSet, CallBackViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -11,6 +11,7 @@ router.register('help', HelpViewSet)
 router.register('contact', ContactViewSet)
 router.register('advantages', AdvantagesViewSet)
 router.register('slider', MainPageViewSet)
+router.register('callback', CallBackViewSet)
 
 
 urlpatterns = [

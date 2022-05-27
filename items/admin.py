@@ -1,4 +1,4 @@
-from .models import Collection, Item, ItemImage, ItemColor, ItemCart, Order
+from .models import Collection, Item, ItemImageColor, ItemCart, Order
 from django import forms
 from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
@@ -13,16 +13,13 @@ class ItemAdminForm(forms.ModelForm):
 
 
 class PhotoAdmin(admin.StackedInline):
-    model = ItemImage
-
-
-class ColorAdmin(admin.StackedInline):
-    model = ItemColor
+    model = ItemImageColor
+    max_num = 8
 
 
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
-    inlines = [PhotoAdmin, ColorAdmin]
+    inlines = [PhotoAdmin]
     form = ItemAdminForm
 
     class Meta:

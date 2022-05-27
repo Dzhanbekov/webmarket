@@ -28,6 +28,7 @@ class Item(models.Model):
     material = models.CharField(max_length=200, verbose_name='Материал')
     is_in_cart = models.BooleanField(default=False)
     collection = models.ForeignKey(Collection, models.CASCADE, verbose_name='Коллекция', related_name='itemcollection')
+    date = models.DateField(verbose_name='дата добавления',  blank=True, null=True)
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
@@ -45,22 +46,23 @@ class Item(models.Model):
         verbose_name_plural = "Товары"
 
 
-class ItemImage(models.Model):
+class ItemImageColor(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='itemimage')
     image = models.ImageField(upload_to='item')
+    custom_color = ColorField(default='#FF0000', verbose_name="Цвет")
 
     class Meta:
         verbose_name = "фотографии товара"
         verbose_name_plural = "фотографии товара"
 
 
-class ItemColor(models.Model):
-    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='itemcolor')
-    custom_color = ColorField(default='#FF0000', verbose_name="Цвет")
-
-    class Meta:
-        verbose_name = "цвет товара"
-        verbose_name_plural = "цвет товара"
+# class ItemColor(models.Model):
+#     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='itemcolor')
+#     custom_color = ColorField(default='#FF0000', verbose_name="Цвет")
+#
+#     class Meta:
+#         verbose_name = "цвет товара"
+#         verbose_name_plural = "цвет товара"
 
 
 class Order(models.Model):

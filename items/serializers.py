@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
-from .models import Collection, Item, ItemImage, ItemColor, ItemCart, Order
+from .models import Collection, Item, ItemImageColor, ItemCart, Order
 
 
 class CollectionGetSerializer(serializers.ModelSerializer):
@@ -42,8 +42,8 @@ class ImageItemSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = ItemImage
-        fields = ('id', 'image_url')
+        model = ItemImageColor
+        fields = ('id', 'image_url', 'custom_color')
 
     def get_image_url(self, obj):
         try:
@@ -55,24 +55,23 @@ class ImageItemSerializer(serializers.ModelSerializer):
             return None
 
 
-class ItemColorSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ItemColor
-        fields = '__all__'
+# class ItemColorSerializer(serializers.ModelSerializer):
+#
+#     class Meta:
+#         model = ItemColor
+#         fields = '__all__'
 
 
 class ItemCreateSerializer(serializers.ModelSerializer):
     itemimage = ImageItemSerializer(many=True, read_only=True)
-    itemcolor = ItemColorSerializer(many=True, read_only=True)
 
     class Meta:
         model = Item
         fields = ('id', 'title', 'item_id',
-                  'basic_price', 'price',
+                  'basic_price', 'price', 'discount',
                   'description', 'size_range',
                   'amount_in',
-                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection', 'itemcolor'
+                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection'
                   )
 
     def create(self, validated_data):
@@ -95,7 +94,6 @@ class ItemCreateSerializer(serializers.ModelSerializer):
 
 class ItemsListSerializer(serializers.ModelSerializer):
     itemimage = ImageItemSerializer(many=True, read_only=True)
-    itemcolor = ItemColorSerializer(many=True, read_only=True)
     collection = CollectionGetSerializer()
 
     class Meta:
@@ -109,14 +107,12 @@ class ItemsListSerializer(serializers.ModelSerializer):
             'itemimage',
             'collection',
             'size_range',
-            'itemcolor',
         )
         read_only_fields = ('id',)
 
 
 class ItemsDetailSerializer(serializers.ModelSerializer):
     itemimage = ImageItemSerializer(many=True, read_only=True)
-    itemcolor = ItemColorSerializer(many=True, read_only=True)
     collection = CollectionGetSerializer()
 
     class Meta:
@@ -124,7 +120,6 @@ class ItemsDetailSerializer(serializers.ModelSerializer):
         fields = (
             'title',
             'item_id',
-            'itemcolor',
             'price',
             'basic_price',
             'description',

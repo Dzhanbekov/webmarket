@@ -2,11 +2,16 @@ from django.shortcuts import render
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
-from .models import AboutUs, News, Help, Offer, Contacts, MainPageIcon, Advantages
+from .models import AboutUs, News, Help, Offer, Contacts, MainPageIcon, Advantages, CallBack
 from .serializers import AboutSerializer, NewsSerializer, HelpSerializer, OfferSerializer,\
-    ContactsSerializer, MainPageIconSerializer, AdvantagesSerializer
+    ContactsSerializer, MainPageIconSerializer, AdvantagesSerializer, CallBackSerializer
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+
+
+class CallBackViewSet(viewsets.ModelViewSet):
+    queryset = CallBack.objects.all()
+    serializer_class = CallBackSerializer
 
 
 class ContactViewSet(viewsets.ModelViewSet):
