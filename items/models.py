@@ -1,6 +1,20 @@
 from colorfield.fields import ColorField
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
+from django.contrib.auth.models import User
+
+
+class Customer(models.Model):
+    user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
+    name = models.CharField(max_length=150, verbose_name='Имя')
+    device = models.CharField(max_length=200, null=True, blank=True)
+
+    def __str__(self):
+        if self.name:
+            name = self.name
+        else:
+            name = self.device
+        return str(name)
 
 
 class Collection(models.Model):
@@ -56,21 +70,13 @@ class ItemImageColor(models.Model):
         verbose_name_plural = "фотографии товара"
 
 
-# class ItemColor(models.Model):
-#     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='itemcolor')
-#     custom_color = ColorField(default='#FF0000', verbose_name="Цвет")
-#
-#     class Meta:
-#         verbose_name = "цвет товара"
-#         verbose_name_plural = "цвет товара"
-
-
 class Order(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано", editable=False)
-    firstname = models.CharField(max_length=150, verbose_name='Имя')
+    # customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
+    name = models.CharField(max_length=150, verbose_name='Имя')
     lastname = models.CharField(max_length=150, verbose_name='Фамилия')
     email = models.EmailField(max_length=150, verbose_name='Электронная почта')
     phone_number = PhoneNumberField(verbose_name='Номер телефона', unique=False)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано", editable=False)
     country = models.CharField(max_length=150, verbose_name='Страна')
     city = models.CharField(max_length=150, verbose_name='Город')
 
@@ -78,8 +84,8 @@ class Order(models.Model):
         return f'{self.created_at.year}/' \
                f'{self.created_at.month}/' \
                f'{self.created_at.day} ' \
-               f'{self.created_at.hour}:{self.created_at.minute}' \
-
+               f'{self.created_at.hour}:{self.created_at.minute} - '\
+               f'{self.name}'
 
     class Meta:
         verbose_name = "Заказ"
@@ -88,9 +94,10 @@ class Order(models.Model):
 
 class ItemCart(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="order_item", verbose_name="Продукт")
-    amount = models.PositiveIntegerField(default=1, verbose_name="Количество")
+    amount = models.PositiveIntegerField(default=1, verbose_name="Количество", blank=True, null=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_item", verbose_name="Заказ")
-    price = models.PositiveIntegerField(verbose_name='цена', default=0)
+    price = models.PositiveIntegerField(verbose_name='цена', default=0, blank=True, null=True)
+    # customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):

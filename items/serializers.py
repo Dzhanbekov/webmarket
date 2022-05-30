@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
+from rest_framework.fields import CurrentUserDefault
+
 from .models import Collection, Item, ItemImageColor, ItemCart, Order
 
 
@@ -132,75 +134,15 @@ class ItemsDetailSerializer(serializers.ModelSerializer):
         )
 
 
-class OrderItemAmountSerializer(serializers.ModelSerializer):
-    item = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all())
+class BasketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ItemCart
         fields = (
-            'item',
-            'amount'
-        )
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    order_item = OrderItemAmountSerializer(many=True)
-
-    class Meta:
-        model = Order
-        fields = (
             'id',
-            'created_at',
-            'firstname',
-            'lastname',
-            'email',
-            'phone_number',
-            'country',
-            'city',
-            'order_item',
-        )
-
-
-class ItemAmountSerializer(serializers.ModelSerializer):
-    item = ItemCreateSerializer()
-
-    class Meta:
-        model = ItemCart
-        fields = (
             'item',
-            'amount'
+            'amount',
+            'order',
         )
 
-
-class OrderUserSerializer(serializers.ModelSerializer):
-    firstname = serializers.CharField(required=True)
-    phone_number = PhoneNumberField(required=True)
-
-    class Meta:
-        model = get_user_model()
-        fields = (
-            'first_name',
-            'phone_number'
-        )
-
-
-class OrderCreateReviewSerializer(serializers.ModelSerializer):
-    user = OrderUserSerializer(required=False)
-
-    class Meta:
-        model = Order
-        fields = (
-
-            'firstname',
-            'lastname',
-            'email',
-            'phone_number',
-            'country',
-            'city',
-            'order_item',
-        )
-        read_only_fields = (
-            'id',
-            'created_at',
-        )
-
+        read_only_fields = ('id',)

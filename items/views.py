@@ -1,12 +1,13 @@
 from django.shortcuts import render, get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Collection, Item, ItemImageColor
+from .models import Collection, Item, ItemImageColor, ItemCart
 from .serializers import CollectionGetSerializer, CollectionCreateSerializer, ItemsDetailSerializer,\
-    ItemsListSerializer, ItemCreateSerializer
+    ItemsListSerializer, ItemCreateSerializer, BasketSerializer
 
 from rest_framework.generics import ListAPIView, ListCreateAPIView, CreateAPIView
 
@@ -121,3 +122,19 @@ class ItemCreateView(CreateAPIView):
         context = super(ItemCreateView, self).get_serializer_context()
         context.update({"context": self.request})
         return context
+
+
+class APIBasketCreateView(CreateAPIView):
+    serializer_class = BasketSerializer
+    queryset = ItemCart.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(
+            data=request.data, context={'request': request})
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+

@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import CollectionAPIView, CollectionListView, CollectionCreateView, ItemAPIView, \
-    ItemCreateView, ItemListView
+    ItemCreateView, ItemListView, APIBasketCreateView
 
 urlpatterns = [
     path('', ItemListView.as_view()),
@@ -9,5 +9,6 @@ urlpatterns = [
     path('collections/create/', CollectionCreateView.as_view()),
     path('collections/', CollectionListView.as_view()),
     path('collections/<int:pk>/', CollectionAPIView.as_view()),
+    path('basket/create/', APIBasketCreateView.as_view()),
 
 ]
