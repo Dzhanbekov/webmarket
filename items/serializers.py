@@ -1,5 +1,7 @@
+from django.contrib.auth import get_user_model
+from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
-from .models import Collection, Item, ItemImage, ItemColor
+from .models import Collection, Item, ItemImageColor, ItemCart, Order
 
 
 class CollectionGetSerializer(serializers.ModelSerializer):
@@ -36,29 +38,12 @@ class CollectionCreateSerializer(serializers.ModelSerializer):
         return instance
 
 
-# class ItemImageSerializer(serializers.ModelSerializer):
-#     image_url = serializers.SerializerMethodField()
-#
-#     class Meta:
-#         model = ItemImage
-#         fields = ('id', 'image_url', 'item')
-#
-#     def get_image_url(self, obj):
-#         try:
-#             request = self.context.get('context')
-#             image_url = obj.image.path
-#             print(self.context.get('context'))
-#             return request.build_absolute_uri(image_url)
-#         except ValueError:
-#             return None
-
-
 class ImageItemSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = ItemImage
-        fields = ('id', 'image_url')
+        model = ItemImageColor
+        fields = ('id', 'image_url', 'custom_color')
 
     def get_image_url(self, obj):
         try:
@@ -70,24 +55,23 @@ class ImageItemSerializer(serializers.ModelSerializer):
             return None
 
 
-class ItemColorSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ItemColor
-        fields = '__all__'
+# class ItemColorSerializer(serializers.ModelSerializer):
+#
+#     class Meta:
+#         model = ItemColor
+#         fields = '__all__'
 
 
 class ItemCreateSerializer(serializers.ModelSerializer):
     itemimage = ImageItemSerializer(many=True, read_only=True)
-    itemcolor = ItemColorSerializer(many=True, read_only=True)
 
     class Meta:
         model = Item
         fields = ('id', 'title', 'item_id',
-                  'old_price', 'new_price',
+                  'basic_price', 'price', 'discount',
                   'description', 'size_range',
                   'amount_in',
-                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection', 'itemcolor'
+                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection'
                   )
 
     def create(self, validated_data):
@@ -97,8 +81,8 @@ class ItemCreateSerializer(serializers.ModelSerializer):
         instance.item_id = validated_data.get('item_id', instance.item_id)
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
-        instance.price = validated_data.get('old_price', instance.old_price)
-        instance.new_price = validated_data.get('new_price', instance.new_price)
+        instance.price = validated_data.get('basic_price', instance.old_price)
+        instance.new_price = validated_data.get('price', instance.new_price)
         instance.collection = validated_data.get('collection', instance.collection)
         instance.material = validated_data.get('material', instance.material)
         instance.compound = validated_data.get('compound', instance.compound)
@@ -110,7 +94,6 @@ class ItemCreateSerializer(serializers.ModelSerializer):
 
 class ItemsListSerializer(serializers.ModelSerializer):
     itemimage = ImageItemSerializer(many=True, read_only=True)
-    itemcolor = ItemColorSerializer(many=True, read_only=True)
     collection = CollectionGetSerializer()
 
     class Meta:
@@ -118,18 +101,18 @@ class ItemsListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
-            'new_price',
+            'basic_price',
+            'price',
+            'discount',
             'itemimage',
             'collection',
             'size_range',
-            'itemcolor',
         )
         read_only_fields = ('id',)
 
 
 class ItemsDetailSerializer(serializers.ModelSerializer):
     itemimage = ImageItemSerializer(many=True, read_only=True)
-    itemcolor = ItemColorSerializer(many=True, read_only=True)
     collection = CollectionGetSerializer()
 
     class Meta:
@@ -137,9 +120,8 @@ class ItemsDetailSerializer(serializers.ModelSerializer):
         fields = (
             'title',
             'item_id',
-            'itemcolor',
-            'new_price',
-            'old_price',
+            'price',
+            'basic_price',
             'description',
             'size_range',
             'material',
@@ -148,3 +130,77 @@ class ItemsDetailSerializer(serializers.ModelSerializer):
             'itemimage',
             'collection',
         )
+
+
+class OrderItemAmountSerializer(serializers.ModelSerializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all())
+
+    class Meta:
+        model = ItemCart
+        fields = (
+            'item',
+            'amount'
+        )
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    order_item = OrderItemAmountSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = (
+            'id',
+            'created_at',
+            'firstname',
+            'lastname',
+            'email',
+            'phone_number',
+            'country',
+            'city',
+            'order_item',
+        )
+
+
+class ItemAmountSerializer(serializers.ModelSerializer):
+    item = ItemCreateSerializer()
+
+    class Meta:
+        model = ItemCart
+        fields = (
+            'item',
+            'amount'
+        )
+
+
+class OrderUserSerializer(serializers.ModelSerializer):
+    firstname = serializers.CharField(required=True)
+    phone_number = PhoneNumberField(required=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            'first_name',
+            'phone_number'
+        )
+
+
+class OrderCreateReviewSerializer(serializers.ModelSerializer):
+    user = OrderUserSerializer(required=False)
+
+    class Meta:
+        model = Order
+        fields = (
+
+            'firstname',
+            'lastname',
+            'email',
+            'phone_number',
+            'country',
+            'city',
+            'order_item',
+        )
+        read_only_fields = (
+            'id',
+            'created_at',
+        )
+

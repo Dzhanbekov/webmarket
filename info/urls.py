@@ -1,12 +1,19 @@
-from django.urls import path
-from .views import AboutUsView, NewsListView, NewsDetailView, OfferListView, HelpListView
+from django.urls import path, include
+from .views import AboutUsViewSet, NewsViewSet, OfferViewSet, HelpViewSet, \
+    ContactViewSet, AdvantagesViewSet, MainPageViewSet, CallBackViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register('about', AboutUsViewSet)
+router.register('news', NewsViewSet)
+router.register('offer', OfferViewSet)
+router.register('help', HelpViewSet)
+router.register('contact', ContactViewSet)
+router.register('advantages', AdvantagesViewSet)
+router.register('slider', MainPageViewSet)
+router.register('callback', CallBackViewSet)
+
 
 urlpatterns = [
-    path('about/', AboutUsView.as_view()),
-    path('news/', NewsListView.as_view()),
-    path('news/<int:pk>/', NewsDetailView.as_view()),
-    path('offer/', OfferListView.as_view()),
-    path('help/', HelpListView.as_view(),),
-    path('help/<int:pk>/', HelpListView.as_view(),),
-
+    path('', include(router.urls))
 ]

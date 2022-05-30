@@ -1,18 +1,26 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Collection, Item, ItemImage, ItemColor
+from .models import Collection, Item, ItemImageColor
 from .serializers import CollectionGetSerializer, CollectionCreateSerializer, ItemsDetailSerializer,\
     ItemsListSerializer, ItemCreateSerializer
 
 from rest_framework.generics import ListAPIView, ListCreateAPIView, CreateAPIView
 
 
+class CustomPagination(PageNumberPagination):
+    page_size = 8
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
 class CollectionListView(ListAPIView):
     serializer_class = CollectionGetSerializer
     queryset = Collection.objects.all().order_by('-id')
+    pagination_class = CustomPagination
 
     def get_serializer_context(self):
         context = super(CollectionListView, self).get_serializer_context()
@@ -97,6 +105,7 @@ class ItemAPIView(APIView):
 class ItemListView(ListAPIView):
     serializer_class = ItemsListSerializer
     queryset = Item.objects.all().order_by('-id')
+    pagination_class = CustomPagination
 
     def get_serializer_context(self):
         context = super(ItemListView, self).get_serializer_context()

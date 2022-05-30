@@ -1,5 +1,33 @@
 from rest_framework import serializers
-from .models import AboutUs, News, Help, Offer
+from .models import AboutUs, News, Help, Offer, Contacts, Advantages, MainPageIcon, CallBack
+
+
+class CallBackSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CallBack
+        fields = ('name', 'phone_number', 'reason')
+
+
+class ContactsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Contacts
+        fields = '__all__'
+
+
+class AdvantagesSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Advantages
+        fields = '__all__'
+
+
+class MainPageIconSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MainPageIcon
+        fields = '__all__'
 
 
 class AboutSerializer(serializers.ModelSerializer):

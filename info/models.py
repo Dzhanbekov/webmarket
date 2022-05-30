@@ -1,4 +1,5 @@
 from django.db import models
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class AboutUs(models.Model):
@@ -51,3 +52,58 @@ class Offer(models.Model):
     class Meta:
         verbose_name = 'Публичная Оферта'
         verbose_name_plural = 'Публичная Оферта'
+
+
+class Contacts(models.Model):
+    email = models.EmailField(max_length=150, verbose_name='Электронная почта')
+    phone_number = PhoneNumberField(verbose_name='Номер телефона', unique=False)
+    phone_number_2 = PhoneNumberField(verbose_name='Номер телефона 2', unique=False)
+    whatsapp_link = models.CharField(max_length=200, verbose_name='Ссылка на вотсап')
+    telegram_link = models.CharField(max_length=200, verbose_name='Ссылка на вотсап')
+    instagram_link = models.CharField(max_length=200, verbose_name='Ссылка на вотсап')
+
+    class Meta:
+        verbose_name = 'Контакты'
+        verbose_name_plural = 'Контакты'
+
+
+class Advantages(models.Model):
+    icon = models.ImageField(upload_to='advantages', verbose_name='Иконка')
+    title = models.CharField(max_length=200, verbose_name='Заголовок')
+    text = models.TextField(verbose_name='Описание')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Наши Преимущества'
+        verbose_name_plural = 'Наши Преимущества'
+
+
+class MainPageIcon(models.Model):
+    icon = models.ImageField(upload_to='mainpage', verbose_name='Иконка')
+    link = models.CharField(max_length=200, verbose_name='ссылка', blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Фото для главной страницы'
+        verbose_name_plural = 'Фото для главной страницы'
+
+
+CALL_TYPE = [('YES', 'ДА'), ('NO', 'НЕТ')]
+
+
+class CallBack(models.Model):
+    name = models.CharField(max_length=200, verbose_name='имя')
+    phone_number = PhoneNumberField(verbose_name='Номер телефона', unique=False)
+    reason = models.CharField(max_length=200, verbose_name='тип обращения')
+    call_status = models.CharField(max_length=3, choices=CALL_TYPE, verbose_name='статус звонка', default='NO')
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.name} - {self.reason} - {self.call_status}'
+
+    class Meta:
+        verbose_name = 'Обратный звонок'
+        verbose_name_plural = 'Обратный звонок'
+
+
