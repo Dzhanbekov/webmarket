@@ -57,13 +57,6 @@ class ImageItemSerializer(serializers.ModelSerializer):
             return None
 
 
-# class ItemColorSerializer(serializers.ModelSerializer):
-#
-#     class Meta:
-#         model = ItemColor
-#         fields = '__all__'
-
-
 class ItemCreateSerializer(serializers.ModelSerializer):
     itemimage = ImageItemSerializer(many=True, read_only=True)
 
@@ -73,7 +66,7 @@ class ItemCreateSerializer(serializers.ModelSerializer):
                   'basic_price', 'price', 'discount',
                   'description', 'size_range',
                   'amount_in',
-                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection'
+                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection', 'is_in_favourite'
                   )
 
     def create(self, validated_data):
@@ -109,6 +102,7 @@ class ItemsListSerializer(serializers.ModelSerializer):
             'itemimage',
             'collection',
             'size_range',
+            'is_in_favourite',
         )
         read_only_fields = ('id',)
 
@@ -131,7 +125,22 @@ class ItemsDetailSerializer(serializers.ModelSerializer):
             'amount_in',
             'itemimage',
             'collection',
+            'is_in_favourite',
         )
+
+
+class BasketCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ItemCart
+        fields = (
+            'id',
+            'item',
+            'amount',
+            'order',
+        )
+
+        read_only_fields = ('id',)
 
 
 class BasketSerializer(serializers.ModelSerializer):
@@ -145,4 +154,19 @@ class BasketSerializer(serializers.ModelSerializer):
             'order',
         )
 
-        read_only_fields = ('id',)
+        read_only_fields = ('id', 'amount',)
+
+
+class BasketListSerializer(serializers.ModelSerializer):
+    item = ItemsListSerializer()
+
+    class Meta:
+        model = ItemCart
+        fields = (
+            'id',
+            'item',
+            'amount',
+            'order',
+        )
+
+        read_only_fields = ('id', 'amount', 'order',)

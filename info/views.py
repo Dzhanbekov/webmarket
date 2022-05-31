@@ -10,26 +10,36 @@ from django.shortcuts import get_object_or_404
 
 
 class CallBackViewSet(viewsets.ModelViewSet):
+    """function for callback's all http methods"""
+
     queryset = CallBack.objects.all()
     serializer_class = CallBackSerializer
 
 
 class ContactViewSet(viewsets.ModelViewSet):
+    """function for contact's all http methods"""
+
     queryset = Contacts.objects.all()
     serializer_class = ContactsSerializer
 
 
 class MainPageViewSet(viewsets.ModelViewSet):
+    """function for main pages all http methods"""
+
     queryset = MainPageIcon.objects.all()
     serializer_class = MainPageIconSerializer
 
 
 class AdvantagesViewSet(viewsets.ModelViewSet):
+    """function for advantages all http methods"""
+
     queryset = Advantages.objects.all()
     serializer_class = AdvantagesSerializer
 
 
 class AboutUsViewSet(viewsets.ModelViewSet):
+    """function for about uses all http methods"""
+
     queryset = AboutUs.objects.all()
     serializer_class = AboutSerializer
 

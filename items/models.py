@@ -4,19 +4,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.models import User
 
 
-class Customer(models.Model):
-    user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
-    name = models.CharField(max_length=150, verbose_name='Имя')
-    device = models.CharField(max_length=200, null=True, blank=True)
-
-    def __str__(self):
-        if self.name:
-            name = self.name
-        else:
-            name = self.device
-        return str(name)
-
-
 class Collection(models.Model):
     name = models.CharField(max_length=150, verbose_name='Наименование коллекции')
     image = models.ImageField(upload_to='collection', verbose_name='Картинка')
@@ -40,7 +27,10 @@ class Item(models.Model):
     amount_in = models.PositiveIntegerField('количество в линейке', default=0)
     compound = models.CharField(max_length=200, verbose_name='Состав Ткани')
     material = models.CharField(max_length=200, verbose_name='Материал')
-    is_in_cart = models.BooleanField(default=False)
+    is_in_cart = models.BooleanField(default=False, blank=True, null=True)
+    is_in_favourite = models.BooleanField(default=False, verbose_name='избранное?', blank=True, null=True)
+    is_novelty = models.BooleanField(default=False, blank=True, null=True, verbose_name='новинка?')
+    is_bestseller = models.BooleanField(default=False, blank=True, null=True, verbose_name='хит продаж?')
     collection = models.ForeignKey(Collection, models.CASCADE, verbose_name='Коллекция', related_name='itemcollection')
     date = models.DateField(verbose_name='дата добавления',  blank=True, null=True)
 
@@ -71,7 +61,6 @@ class ItemImageColor(models.Model):
 
 
 class Order(models.Model):
-    # customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=150, verbose_name='Имя')
     lastname = models.CharField(max_length=150, verbose_name='Фамилия')
     email = models.EmailField(max_length=150, verbose_name='Электронная почта')
@@ -97,7 +86,6 @@ class ItemCart(models.Model):
     amount = models.PositiveIntegerField(default=1, verbose_name="Количество", blank=True, null=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_item", verbose_name="Заказ")
     price = models.PositiveIntegerField(verbose_name='цена', default=0, blank=True, null=True)
-    # customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
@@ -106,6 +94,23 @@ class ItemCart(models.Model):
         else:
             self.price = self.item.basic_price * self.amount
         super(ItemCart, self).save()
+
+    @staticmethod
+    def get_total_price_of_item():
+        total = 0
+        for orderitem in ItemCart.objects.all():
+            if orderitem.item.discount is not None:
+                total += orderitem.item.price * orderitem.amount
+            else:
+                total += orderitem.item.basic_price * orderitem.amount
+        return total
+
+    @staticmethod
+    def get_total_quantity_of_item():
+        total = 0
+        for orderitem in ItemCart.objects.all():
+            total += orderitem.amount
+        return total
 
     def __str__(self):
         return f'{self.item}:{self.amount} - {self.item.price * self.amount}'
