@@ -42,6 +42,11 @@ class Help(models.Model):
         verbose_name_plural = 'Помощь'
 
 
+class HelpIcon(models.Model):
+    help = models.OneToOneField(Help, on_delete=models.DO_NOTHING, related_name='helpicon')
+    icon = models.ImageField(upload_to='help')
+
+
 class Offer(models.Model):
     title = models.CharField(max_length=200, verbose_name='Заголовок', default='Публичная оферта')
     text = models.TextField()

@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
+from rest_framework.fields import CurrentUserDefault
+
 from .models import Collection, Item, ItemImageColor, ItemCart, Order
 
 
@@ -55,13 +57,6 @@ class ImageItemSerializer(serializers.ModelSerializer):
             return None
 
 
-# class ItemColorSerializer(serializers.ModelSerializer):
-#
-#     class Meta:
-#         model = ItemColor
-#         fields = '__all__'
-
-
 class ItemCreateSerializer(serializers.ModelSerializer):
     itemimage = ImageItemSerializer(many=True, read_only=True)
 
@@ -71,7 +66,7 @@ class ItemCreateSerializer(serializers.ModelSerializer):
                   'basic_price', 'price', 'discount',
                   'description', 'size_range',
                   'amount_in',
-                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection'
+                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection', 'is_in_favourite'
                   )
 
     def create(self, validated_data):
@@ -107,6 +102,7 @@ class ItemsListSerializer(serializers.ModelSerializer):
             'itemimage',
             'collection',
             'size_range',
+            'is_in_favourite',
         )
         read_only_fields = ('id',)
 
@@ -129,78 +125,48 @@ class ItemsDetailSerializer(serializers.ModelSerializer):
             'amount_in',
             'itemimage',
             'collection',
+            'is_in_favourite',
         )
 
 
-class OrderItemAmountSerializer(serializers.ModelSerializer):
-    item = serializers.PrimaryKeyRelatedField(queryset=Item.objects.all())
+class BasketCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ItemCart
         fields = (
-            'item',
-            'amount'
-        )
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    order_item = OrderItemAmountSerializer(many=True)
-
-    class Meta:
-        model = Order
-        fields = (
             'id',
-            'created_at',
-            'firstname',
-            'lastname',
-            'email',
-            'phone_number',
-            'country',
-            'city',
-            'order_item',
+            'item',
+            'amount',
+            'order',
         )
 
+        read_only_fields = ('id',)
 
-class ItemAmountSerializer(serializers.ModelSerializer):
-    item = ItemCreateSerializer()
+
+class BasketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ItemCart
         fields = (
-            'item',
-            'amount'
-        )
-
-
-class OrderUserSerializer(serializers.ModelSerializer):
-    firstname = serializers.CharField(required=True)
-    phone_number = PhoneNumberField(required=True)
-
-    class Meta:
-        model = get_user_model()
-        fields = (
-            'first_name',
-            'phone_number'
-        )
-
-
-class OrderCreateReviewSerializer(serializers.ModelSerializer):
-    user = OrderUserSerializer(required=False)
-
-    class Meta:
-        model = Order
-        fields = (
-
-            'firstname',
-            'lastname',
-            'email',
-            'phone_number',
-            'country',
-            'city',
-            'order_item',
-        )
-        read_only_fields = (
             'id',
-            'created_at',
+            'item',
+            'amount',
+            'order',
         )
 
+        read_only_fields = ('id', 'amount',)
+
+
+class BasketListSerializer(serializers.ModelSerializer):
+    item = ItemsListSerializer()
+
+    class Meta:
+        model = ItemCart
+        fields = (
+            'id',
+            'item',
+            'amount',
+            'order',
+        )
+
+        read_only_fields = ('id', 'amount', 'order',)
