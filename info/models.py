@@ -1,3 +1,7 @@
+import io
+from django.core.files.base import ContentFile
+
+from PIL import Image
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -43,7 +47,6 @@ class Help(models.Model):
 
 
 class HelpIcon(models.Model):
-    help = models.OneToOneField(Help, on_delete=models.DO_NOTHING, related_name='helpicon')
     icon = models.ImageField(upload_to='help')
 
 
@@ -60,12 +63,14 @@ class Offer(models.Model):
 
 
 class Contacts(models.Model):
+    header = models.ImageField(upload_to='header')
+    footer = models.ImageField(upload_to='footer')
     email = models.EmailField(max_length=150, verbose_name='Электронная почта')
     phone_number = PhoneNumberField(verbose_name='Номер телефона', unique=False)
     phone_number_2 = PhoneNumberField(verbose_name='Номер телефона 2', unique=False)
     whatsapp_link = models.CharField(max_length=200, verbose_name='Ссылка на вотсап')
-    telegram_link = models.CharField(max_length=200, verbose_name='Ссылка на вотсап')
-    instagram_link = models.CharField(max_length=200, verbose_name='Ссылка на вотсап')
+    telegram_link = models.CharField(max_length=200, verbose_name='Ссылка на телеграмм')
+    instagram_link = models.CharField(max_length=200, verbose_name='Ссылка на инстаграмм')
 
     class Meta:
         verbose_name = 'Контакты'

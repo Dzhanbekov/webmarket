@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import AboutUs, News, Help, Offer, Contacts, Advantages, MainPageIcon, CallBack, HelpIcon
+from .models import AboutUs, News, Help, Offer, Contacts, Advantages, MainPageIcon, CallBack,\
+    HelpIcon
 
 
 class CallBackSerializer(serializers.ModelSerializer):
@@ -52,15 +53,25 @@ class OfferSerializer(serializers.ModelSerializer):
 
 
 class HelpIconSerializer(serializers.ModelSerializer):
+    icon = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = HelpIcon
         fields = ['icon']
 
+    def get_icon(self, obj):
+        try:
+            request = self.context.get('context')
+            icon_url = obj.icon.path
+            return request.build_absolute_uri(icon_url)
+        except ValueError:
+            return None
+
 
 class HelpSerializer(serializers.ModelSerializer):
-    helpicon = HelpIconSerializer()
 
     class Meta:
         model = Help
-        fields = ['question', 'answer', 'helpicon']
+        fields = ['question', 'answer', ]
+
+

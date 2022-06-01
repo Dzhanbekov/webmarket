@@ -1,12 +1,12 @@
-from django.contrib.auth import get_user_model
-from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
-from rest_framework.fields import CurrentUserDefault
+from rest_framework.exceptions import ValidationError
 
-from .models import Collection, Item, ItemImageColor, ItemCart, Order
+
+from .models import Collection, Item, ItemImageColor, ItemCart, Order, SearchHelper
 
 
 class CollectionGetSerializer(serializers.ModelSerializer):
+    """serializer for get collection"""
     image_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -25,7 +25,7 @@ class CollectionGetSerializer(serializers.ModelSerializer):
 
 
 class CollectionCreateSerializer(serializers.ModelSerializer):
-
+    """serializer for create collection"""
     class Meta:
         model = Collection
         fields = ('id', 'name', 'image')
@@ -41,6 +41,7 @@ class CollectionCreateSerializer(serializers.ModelSerializer):
 
 
 class ImageItemSerializer(serializers.ModelSerializer):
+    '''serializer for item image and item color with full url image'''
     image_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -58,6 +59,7 @@ class ImageItemSerializer(serializers.ModelSerializer):
 
 
 class ItemCreateSerializer(serializers.ModelSerializer):
+    """serializer for create item"""
     itemimage = ImageItemSerializer(many=True, read_only=True)
 
     class Meta:
@@ -88,6 +90,7 @@ class ItemCreateSerializer(serializers.ModelSerializer):
 
 
 class ItemsListSerializer(serializers.ModelSerializer):
+    """serializer for list item"""
     itemimage = ImageItemSerializer(many=True, read_only=True)
     collection = CollectionGetSerializer()
 
@@ -107,7 +110,30 @@ class ItemsListSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
 
+class ItemsFavouriteSerializer(serializers.ModelSerializer):
+    """serializer for select one item to favourite"""
+    class Meta:
+        model = Item
+        exclude = ('date', 'is_novelty', 'is_in_cart', 'is_bestseller')
+        read_only_fields = (
+            'id',
+            'title',
+            'item_id',
+            'price',
+            'basic_price',
+            'description',
+            'size_range',
+            'material',
+            'compound',
+            'amount_in',
+            'itemimage',
+            'collection',
+            'discount',
+        )
+
+
 class ItemsDetailSerializer(serializers.ModelSerializer):
+    """serializer for detail item"""
     itemimage = ImageItemSerializer(many=True, read_only=True)
     collection = CollectionGetSerializer()
 
@@ -130,7 +156,7 @@ class ItemsDetailSerializer(serializers.ModelSerializer):
 
 
 class BasketCreateSerializer(serializers.ModelSerializer):
-
+    """serializer for create new basket"""
     class Meta:
         model = ItemCart
         fields = (
@@ -144,7 +170,7 @@ class BasketCreateSerializer(serializers.ModelSerializer):
 
 
 class BasketSerializer(serializers.ModelSerializer):
-
+    """serializer for add amount item in basket"""
     class Meta:
         model = ItemCart
         fields = (
@@ -158,6 +184,7 @@ class BasketSerializer(serializers.ModelSerializer):
 
 
 class BasketListSerializer(serializers.ModelSerializer):
+    """serializer for list items in basket"""
     item = ItemsListSerializer()
 
     class Meta:
@@ -170,3 +197,25 @@ class BasketListSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = ('id', 'amount', 'order',)
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    """serializer for create order"""
+    class Meta:
+        model = Order
+        fields = '__all__'
+
+    def create(self, validated_data):
+        return Order.objects.create(**validated_data)
+
+    def validate(self, attrs):
+        if attrs['agreement'] == False:
+            raise ValidationError('нужно согласие с публичной офертой')
+        return attrs
+
+
+class SearchHelperSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SearchHelper
+        fields = '__all__'

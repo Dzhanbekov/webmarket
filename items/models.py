@@ -68,6 +68,7 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано", editable=False)
     country = models.CharField(max_length=150, verbose_name='Страна')
     city = models.CharField(max_length=150, verbose_name='Город')
+    agreement = models.BooleanField(default=False, verbose_name='Согласие с условиями публичной оферты')
 
     def __str__(self):
         return f'{self.created_at.year}/' \
@@ -118,6 +119,14 @@ class ItemCart(models.Model):
     class Meta:
         verbose_name = "Корзина"
         verbose_name_plural = "Корзины"
+
+
+class SearchHelper(models.Model):
+    name = models.CharField(max_length=250)
+    counter = models.IntegerField()
+
+    def __str__(self):
+        return self.name
 
 
 
