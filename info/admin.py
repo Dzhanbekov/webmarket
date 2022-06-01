@@ -1,4 +1,5 @@
-from .models import AboutUs, News, Help, Offer, Contacts, MainPageIcon, Advantages, CallBack, HelpIcon
+from .models import AboutUs, News, Help, Offer, Contacts, MainPageIcon, Advantages, CallBack, \
+    HelpIcon
 from django import forms
 from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
@@ -57,8 +58,25 @@ class AboutUsAdmin(admin.ModelAdmin):
         return super().has_add_permission(request)
 
 
+@admin.register(Contacts)
+class ContactsAdmin(admin.ModelAdmin):
+
+    class Meta:
+        model = Contacts
+
+
+@admin.register(HelpIcon)
+class ContactsAdmin(admin.ModelAdmin):
+
+    class Meta:
+        model = HelpIcon
+
+    def has_add_permission(self, request):
+        if self.model.objects.count() >= 1:
+            return False
+        return super().has_add_permission(request)
+
+
 admin.site.register(Help)
-admin.site.register(Contacts)
 admin.site.register(MainPageIcon)
 admin.site.register(Advantages)
-admin.site.register(HelpIcon)
