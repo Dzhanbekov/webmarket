@@ -1,7 +1,16 @@
 from colorfield.fields import ColorField
+from django.core.exceptions import ValidationError
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.models import User
+
+
+def validate_slash(value):
+    if str(value[0:2] + value[3:]).isdecimal() and value[2] == '-' \
+            and int(value[0:2]) + int(value[3:]) % 2 == 0 and int(value[0:2]) < int(value[3:]):
+        return value
+    else:
+        raise ValidationError("this field must be, for example 44-50")
 
 
 class Collection(models.Model):
@@ -23,8 +32,8 @@ class Item(models.Model):
     price = models.PositiveIntegerField('новая Цена', default=0, blank=True, null=True)
     discount = models.PositiveIntegerField(default=0, verbose_name='процент скидки', blank=True, null=True)
     description = models.TextField(verbose_name='О Товаре')
-    size_range = models.CharField(max_length=20, verbose_name='размерный ряд')
-    amount_in = models.PositiveIntegerField('количество в линейке', default=0)
+    size_range = models.CharField(max_length=5, verbose_name='размерный ряд', validators=[validate_slash])
+    amount_in = models.PositiveIntegerField('количество в линейке', default=0, blank=True)
     compound = models.CharField(max_length=200, verbose_name='Состав Ткани')
     material = models.CharField(max_length=200, verbose_name='Материал')
     is_in_cart = models.BooleanField(default=False, blank=True, null=True)
@@ -39,6 +48,7 @@ class Item(models.Model):
     ):
         percent = self.basic_price * self.discount / 100
         self.price = self.basic_price - percent
+        self.amount_in = (int(self.size_range[3:]) - int(self.size_range[0:2]) + 2) // 2
         super(Item, self).save()
         super(Item, self).save()
 
@@ -84,7 +94,8 @@ class Order(models.Model):
 
 class ItemCart(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="order_item", verbose_name="Продукт")
-    amount = models.PositiveIntegerField(default=1, verbose_name="Количество", blank=True, null=True)
+    amount = models.PositiveIntegerField(default=1, verbose_name="Количество линеек", blank=True, null=True)
+    amount_item = models.PositiveIntegerField(default=0, verbose_name='количество товаров', blank=True, null=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_item", verbose_name="Заказ")
     price = models.PositiveIntegerField(verbose_name='цена', default=0, blank=True, null=True)
 
@@ -94,27 +105,39 @@ class ItemCart(models.Model):
             self.price = self.item.price * self.amount
         else:
             self.price = self.item.basic_price * self.amount
+        self.amount_item = self.amount * self.item.amount_in
         super(ItemCart, self).save()
 
     @staticmethod
-    def get_total_price_of_item():
+    def get_total_price_of_item_before_discount():
         total = 0
         for orderitem in ItemCart.objects.all():
-            if orderitem.item.discount is not None:
-                total += orderitem.item.price * orderitem.amount
-            else:
-                total += orderitem.item.basic_price * orderitem.amount
+            total += orderitem.item.basic_price * orderitem.amount
+        return total
+
+    @staticmethod
+    def get_total_price_of_item_after_discount():
+        total = 0
+        for orderitem in ItemCart.objects.all():
+            total += orderitem.item.price * orderitem.amount
         return total
 
     @staticmethod
     def get_total_quantity_of_item():
         total = 0
         for orderitem in ItemCart.objects.all():
+            total += orderitem.amount_item
+        return total
+
+    @staticmethod
+    def get_total_quantity_of_item_line():
+        total = 0
+        for orderitem in ItemCart.objects.all():
             total += orderitem.amount
         return total
 
     def __str__(self):
-        return f'{self.item}:{self.amount} - {self.item.price * self.amount}'
+        return f'{self.item}:{self.amount_item} - {self.item.price * self.amount}'
 
     class Meta:
         verbose_name = "Корзина"
