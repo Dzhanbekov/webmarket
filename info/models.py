@@ -105,7 +105,7 @@ CALL_TYPE = [('YES', 'ДА'), ('NO', 'НЕТ')]
 class CallBack(models.Model):
     name = models.CharField(max_length=200, verbose_name='имя')
     phone_number = PhoneNumberField(verbose_name='Номер телефона', unique=False)
-    reason = models.CharField(max_length=200, verbose_name='тип обращения')
+    reason = models.CharField(max_length=200, verbose_name='тип обращения', default="обратный звонок")
     call_status = models.CharField(max_length=3, choices=CALL_TYPE, verbose_name='статус звонка', default='NO')
     date = models.DateTimeField(auto_now_add=True)
 

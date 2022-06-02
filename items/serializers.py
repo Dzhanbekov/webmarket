@@ -157,6 +157,7 @@ class ItemsDetailSerializer(serializers.ModelSerializer):
 
 class BasketCreateSerializer(serializers.ModelSerializer):
     """serializer for create new basket"""
+
     class Meta:
         model = ItemCart
         fields = (
@@ -171,6 +172,7 @@ class BasketCreateSerializer(serializers.ModelSerializer):
 
 class BasketSerializer(serializers.ModelSerializer):
     """serializer for add amount item in basket"""
+
     class Meta:
         model = ItemCart
         fields = (
@@ -178,6 +180,7 @@ class BasketSerializer(serializers.ModelSerializer):
             'item',
             'amount',
             'order',
+
         )
 
         read_only_fields = ('id', 'amount',)

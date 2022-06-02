@@ -1,12 +1,15 @@
 import uuid
+from random import random
 
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.shortcuts import render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
+from rest_framework.filters import BaseFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 from rest_framework import filters
 
@@ -23,6 +26,13 @@ class CustomPagination(PageNumberPagination):
     '''class for pagination'''
 
     page_size = 8
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class Custom12Pagination(PageNumberPagination):
+    '''class for pagination'''
+
+    page_size = 12
     page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -58,6 +68,7 @@ class ItemFavouriteAPIView(UpdateAPIView):
         context = super(ItemFavouriteAPIView, self).get_serializer_context()
         context.update({"context": self.request})
         return context
+
 
 class CollectionCreateView(CreateAPIView):
     '''view for create new collection'''
@@ -222,6 +233,7 @@ class APIAddBasketView(APIView):
         serializer = BasketListSerializer(queryset, many=True, context={'context': request})
         return Response(serializer.data)
 
+    """method for add amount in basket by 1"""
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -231,6 +243,7 @@ class APIAddBasketView(APIView):
             orderitem = ItemCart.objects.filter(item=item, order=order).first()
             orderitem.amount += 1
             orderitem.save()
+
         else:
             orderitem = ItemCart.objects.create(
                 item=item,
@@ -240,6 +253,7 @@ class APIAddBasketView(APIView):
             return Response({'amount': orderitem.amount}, status=201)
         return Response({'amount': orderitem.amount}, status=200)
 
+    """method for delete amount in basket by one"""
     def delete(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -258,22 +272,28 @@ class APIAddBasketView(APIView):
 
 
 class APIBasketTotalPriceView(APIView):
-    '''view for show total item price in basket'''
+    '''view for show total item price before and after discount in basket,
+        sum of discount and total item quantity an basket
+    '''
 
     def get(self, request, *args, **kwargs):
-        total = ItemCart.get_total_price_of_item()
-        return Response({"total_price": total}, status=200)
+        total_before = ItemCart.get_total_price_of_item_before_discount()
+        total_after = ItemCart.get_total_price_of_item_after_discount()
+        discount = total_before - total_after
+        total_quantity = ItemCart.get_total_quantity_of_item()
+        amount = ItemCart.get_total_quantity_of_item_line()
 
-
-class APIBasketTotalQuantityView(APIView):
-    '''view for show total item quantity in basket'''
-
-    def get(self, request, *args, **kwargs):
-        total = ItemCart.get_total_quantity_of_item()
-        return Response({"total_quantity": total}, status=200)
+        return Response({"Сумма товаров до скидки": total_before,
+                         'Сумма товаров после скидки': total_after,
+                         'сумма скидки': discount,
+                         'количество товаров в корзине': total_quantity,
+                         'количество линеек в корзине': amount
+                         }, status=200)
 
 
 class OrderCreateView(CreateAPIView):
+    """view for create order"""
 
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+

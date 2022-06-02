@@ -7,7 +7,7 @@ class CallBackSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CallBack
-        fields = ('name', 'phone_number', 'reason')
+        fields = ('name', 'phone_number',)
 
 
 class ContactsSerializer(serializers.ModelSerializer):

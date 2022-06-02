@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import CollectionAPIView, CollectionListView, CollectionCreateView, ItemAPIView, \
     ItemCreateView, ItemListView, APIBasketCreateView, APIBasketDeleteAllView, APIAddBasketView, \
-    APIBasketTotalPriceView, APIBasketTotalQuantityView, NoveltyListView, OrderCreateView, SameItemListView, \
+    APIBasketTotalPriceView, NoveltyListView, OrderCreateView, SameItemListView, \
     SearchHelperView, ItemFavouriteAPIView
 
 urlpatterns = [
@@ -14,8 +14,7 @@ urlpatterns = [
     path('basket/create/', APIBasketCreateView.as_view(), name='basket-create'),
     path('basket/delete-all/', APIBasketDeleteAllView.as_view(), name='basket-delete-all'),
     path('basket/add/', APIAddBasketView.as_view(), name='basket'),
-    path('basket/total-price/', APIBasketTotalPriceView.as_view(), name='basket-total-price'),
-    path('basket/total-quantity/', APIBasketTotalQuantityView.as_view(), name='basket-total-quantity'),
+    path('basket/total/', APIBasketTotalPriceView.as_view(), name='basket-total'),
     path('novelty/', NoveltyListView.as_view(), name='novelty'),
     path('same/', SameItemListView.as_view(), name='same'),
     path('order/', OrderCreateView.as_view(), name='order'),
