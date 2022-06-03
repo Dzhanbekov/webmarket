@@ -1,25 +1,18 @@
-import uuid
-from random import random
-
-from django.db.models import Q, Max
+from django.db.models import Q, Max, Count
 from django.shortcuts import render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
-from rest_framework.filters import BaseFilterBackend
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.settings import api_settings
 from rest_framework.views import APIView
-from rest_framework import filters
 
 from .models import Collection, Item, ItemImageColor, ItemCart, Order, SearchHelper
 from .serializers import CollectionGetSerializer, CollectionCreateSerializer, ItemsDetailSerializer, \
     ItemsListSerializer, ItemCreateSerializer, BasketSerializer, BasketListSerializer, \
     BasketCreateSerializer, OrderSerializer, SearchHelperSerializer, ItemsFavouriteSerializer
 
-from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, CreateAPIView, UpdateAPIView, \
-    RetrieveAPIView
+from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, CreateAPIView, \
+    UpdateAPIView, RetrieveAPIView
 
 
 class CustomPagination(PageNumberPagination):
@@ -28,6 +21,7 @@ class CustomPagination(PageNumberPagination):
     page_size = 8
     page_size_query_param = 'page_size'
     max_page_size = 100
+
 
 class Custom12Pagination(PageNumberPagination):
     '''class for pagination'''
@@ -58,34 +52,20 @@ class CollectionListView(ListAPIView):
         return context
 
 
-class ItemFavouriteAPIView(UpdateAPIView):
+class ItemFavouriteUpdateView(UpdateAPIView):
     """view for add item to favourite"""
 
     queryset = Item.objects.all()
     serializer_class = ItemsFavouriteSerializer
 
     def get_serializer_context(self):
-        context = super(ItemFavouriteAPIView, self).get_serializer_context()
-        context.update({"context": self.request})
-        return context
-
-
-class CollectionCreateView(CreateAPIView):
-    '''view for create new collection'''
-
-    serializer_class = CollectionCreateSerializer
-    queryset = Collection.objects.all()
-
-    def get_serializer_context(self):
-        context = super(CollectionCreateView, self).get_serializer_context()
+        context = super(ItemFavouriteUpdateView, self).get_serializer_context()
         context.update({"context": self.request})
         return context
 
 
 class CollectionAPIView(APIView):
-    '''view for collection get by pk
-        update collection and delete.
-    '''
+    '''view for collection get by pk  '''
 
     queryset = Collection.objects.all()
 
@@ -94,33 +74,9 @@ class CollectionAPIView(APIView):
         serializer = CollectionGetSerializer(collection, context={'context': request})
         return Response(serializer.data)
 
-    def put(self, request, pk, format=None):
-        collection = get_object_or_404(self.queryset, pk=pk)
-        serializer = CollectionCreateSerializer(collection, data=request.data,
-                                    partial=True, context={'context': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def patch(self, request, pk, format=None):
-        collection = get_object_or_404(self.queryset, pk=pk)
-        serializer = CollectionCreateSerializer(collection, data=request.data,
-                                    partial=True, context={'context': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        collection = get_object_or_404(self.queryset, pk=pk)
-        collection.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class ItemAPIView(RetrieveAPIView):
-    '''view for get item by pk
-    '''
+    '''view for get item by pk '''
 
     queryset = Item.objects.all()
     serializer_class = ItemsDetailSerializer
@@ -137,17 +93,53 @@ class ItemListView(ListAPIView):
     serializer_class = ItemsListSerializer
     queryset = Item.objects.all().order_by('-id')
     pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filter_fields = ['collection', 'is_in_favourite', 'is_bestseller', 'is_novelty']
-    search_fields = ['title']
 
-    def get_serializer_context(self):
-        context = super(ItemListView, self).get_serializer_context()
-        context.update({"context": self.request})
-        return context
+    def get(self, request, *args, **kwargs):
+        queryset = self.queryset
+        search = self.request.query_params.get('search')
+        collection = self.request.query_params.get('collection__id')
+        is_bestseller = self.request.query_params.get('is_bestseller')
+        is_novelty = self.request.query_params.get('is_novelty')
+        is_in_favourite = self.request.query_params.get('is_in_favourite')
+
+        if search is not None:
+            queryset = queryset.filter(Q(title__icontains=search) | Q(collection__name__icontains=search))
+            if queryset:
+                SearchHelper.objects.update_or_create(name=search, counter=+1)
+
+        if collection is not None:
+            queryset = queryset.filter(collection__id=collection)
+        if is_bestseller is not None:
+            queryset = queryset.filter(is_bestseller=is_bestseller)
+        if is_novelty is not None:
+            queryset = queryset.filter(is_novelty=is_novelty)
+        if is_in_favourite is not None:
+            queryset = queryset.filter(is_in_favourite=is_in_favourite)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"context": request})
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class ItemRandomView(APIView):
+    '''view for random 5 item list'''
+
+    serializer_class = ItemsListSerializer
+    queryset = Item.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        queryset = Item.objects.order_by('?')[:5]
+        serializer = self.serializer_class(queryset, many=True, context={'context': request})
+        return Response(serializer.data)
 
 
 class SearchHelperView(ListAPIView):
+    """view for get list search text"""
+
     queryset = SearchHelper.objects.all()
     serializer_class = SearchHelperSerializer
 
@@ -181,18 +173,6 @@ class SameItemListView(ListAPIView):
 
     def get_serializer_context(self):
         context = super(SameItemListView, self).get_serializer_context()
-        context.update({"context": self.request})
-        return context
-
-
-class ItemCreateView(CreateAPIView):
-    '''view for create new item'''
-
-    serializer_class = ItemCreateSerializer
-    queryset = Item.objects.all()
-
-    def get_serializer_context(self):
-        context = super(ItemCreateView, self).get_serializer_context()
         context.update({"context": self.request})
         return context
 

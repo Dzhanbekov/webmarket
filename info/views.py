@@ -8,8 +8,7 @@ from rest_framework.response import Response
 from .models import AboutUs, News, Help, Offer, Contacts, MainPageIcon, Advantages, CallBack, HelpIcon
 from .serializers import AboutSerializer, NewsSerializer, HelpSerializer, OfferSerializer, \
     ContactsSerializer, MainPageIconSerializer, AdvantagesSerializer, CallBackSerializer, HelpIconSerializer
-from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
+from rest_framework import generics
 
 
 class CustomPagination(PageNumberPagination):
@@ -20,54 +19,64 @@ class CustomPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class CallBackViewSet(viewsets.ModelViewSet):
+class CallBackView(generics.CreateAPIView):
     """function for callback's all http methods"""
 
     queryset = CallBack.objects.all()
     serializer_class = CallBackSerializer
 
 
-class ContactViewSet(viewsets.ModelViewSet):
+class ContactView(generics.ListAPIView):
     """function for contact's all http methods"""
 
     queryset = Contacts.objects.all()
     serializer_class = ContactsSerializer
 
 
-class MainPageViewSet(viewsets.ModelViewSet):
+class MainPageView(generics.ListAPIView):
     """function for main pages all http methods"""
 
     queryset = MainPageIcon.objects.all()
     serializer_class = MainPageIconSerializer
 
 
-class AdvantagesViewSet(viewsets.ModelViewSet):
+class AdvantagesView(generics.ListAPIView):
     """function for advantages all http methods"""
 
     queryset = Advantages.objects.all()
     serializer_class = AdvantagesSerializer
 
 
-class AboutUsViewSet(viewsets.ModelViewSet):
+class AboutUsView(generics.ListAPIView):
     """function for about uses all http methods"""
 
     queryset = AboutUs.objects.all()
     serializer_class = AboutSerializer
 
 
-class NewsViewSet(viewsets.ModelViewSet):
+class NewsView(generics.ListAPIView):
     queryset = News.objects.all().order_by('-id')
     serializer_class = NewsSerializer
     pagination_class = CustomPagination
 
 
-class OfferViewSet(viewsets.ModelViewSet):
+class NewsViewDetail(generics.RetrieveAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+
+
+class OfferView(generics.ListAPIView):
     queryset = Offer.objects.all().order_by('-id')
     serializer_class = OfferSerializer
 
 
-class HelpViewSet(viewsets.ModelViewSet):
+class HelpView(generics.ListAPIView):
     queryset = Help.objects.all().order_by('-id')
+    serializer_class = HelpSerializer
+
+
+class HelpDetailView(generics.RetrieveAPIView):
+    queryset = Help.objects.all()
     serializer_class = HelpSerializer
 
 

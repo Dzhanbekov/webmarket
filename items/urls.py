@@ -1,14 +1,12 @@
 from django.urls import path
-from .views import CollectionAPIView, CollectionListView, CollectionCreateView, ItemAPIView, \
-    ItemCreateView, ItemListView, APIBasketCreateView, APIBasketDeleteAllView, APIAddBasketView, \
+from .views import CollectionAPIView, CollectionListView, ItemAPIView, \
+    ItemListView, APIBasketCreateView, APIBasketDeleteAllView, APIAddBasketView, \
     APIBasketTotalPriceView, NoveltyListView, OrderCreateView, SameItemListView, \
-    SearchHelperView, ItemFavouriteAPIView
+    SearchHelperView, ItemFavouriteUpdateView, ItemRandomView
 
 urlpatterns = [
     path('', ItemListView.as_view(), name='items-list'),
     path('<int:pk>/', ItemAPIView.as_view(), name='item-detail'),
-    path('create/', ItemCreateView.as_view(), name='item-create'),
-    path('collections/create/', CollectionCreateView.as_view(), name='collection-create'),
     path('collections/', CollectionListView.as_view(), name='collections-list'),
     path('collections/<int:pk>/', CollectionAPIView.as_view(), name='collection-detail'),
     path('basket/create/', APIBasketCreateView.as_view(), name='basket-create'),
@@ -19,6 +17,7 @@ urlpatterns = [
     path('same/', SameItemListView.as_view(), name='same'),
     path('order/', OrderCreateView.as_view(), name='order'),
     path('search/helper/', SearchHelperView.as_view()),
-    path('favourite/<int:pk>/', ItemFavouriteAPIView.as_view()),
+    path('favourite/<int:pk>/', ItemFavouriteUpdateView.as_view()),
+    path('random/', ItemRandomView.as_view()),
 
 ]

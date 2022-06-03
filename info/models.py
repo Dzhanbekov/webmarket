@@ -49,6 +49,13 @@ class Help(models.Model):
 class HelpIcon(models.Model):
     icon = models.ImageField(upload_to='help')
 
+    def __str__(self):
+        return f'иконка'
+
+    class Meta:
+        verbose_name = 'Иконка для помощи'
+        verbose_name_plural = 'Иконка для помощи'
+
 
 class Offer(models.Model):
     title = models.CharField(max_length=200, verbose_name='Заголовок', default='Публичная оферта')
@@ -71,6 +78,9 @@ class Contacts(models.Model):
     whatsapp_link = models.CharField(max_length=200, verbose_name='Ссылка на вотсап')
     telegram_link = models.CharField(max_length=200, verbose_name='Ссылка на телеграмм')
     instagram_link = models.CharField(max_length=200, verbose_name='Ссылка на инстаграмм')
+
+    def __str__(self):
+        return f'{self.phone_number}'
 
     class Meta:
         verbose_name = 'Контакты'
