@@ -17,11 +17,16 @@ class CollectionGetSerializer(serializers.ModelSerializer):
             'image_url',
         )
 
-    def get_image_url(self, category):
-        request = self.context.get('context')
-        image_url = category.image.path
-        print(self.context.get('context'))
-        return request.build_absolute_uri(image_url)
+    def get_image_url(self, obj):
+        try:
+            request = self.context.get('context')
+            image_url = obj.image.path
+            print(self.context.get('context'))
+            return request.build_absolute_uri(image_url)
+        except AttributeError:
+            return None
+        except ValueError:
+            return None
 
 
 class CollectionCreateSerializer(serializers.ModelSerializer):
@@ -54,6 +59,8 @@ class ImageItemSerializer(serializers.ModelSerializer):
             image_url = obj.image.path
             print(self.context.get('context'))
             return request.build_absolute_uri(image_url)
+        except AttributeError:
+            return None
         except ValueError:
             return None
 

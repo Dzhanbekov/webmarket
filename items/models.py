@@ -6,8 +6,11 @@ from django.contrib.auth.models import User
 
 
 def validate_slash(value):
-    if str(value[0:2] + value[3:]).isdecimal() and value[2] == '-' \
-            and int(value[0:2]) + int(value[3:]) % 2 == 0 and int(value[0:2]) < int(value[3:]):
+    one = value[0:2]
+    two = value[3:]
+    if str(one + two).isdecimal() and value[2] == '-'\
+            and (int(one) + int(two)) % 2 == 0 \
+            and int(one) <= int(two):
         return value
     else:
         raise ValidationError("this field must be, for example 44-50")
@@ -151,6 +154,8 @@ class SearchHelper(models.Model):
     def __str__(self):
         return self.name
 
-
+    class Meta:
+        verbose_name = "Поисковой помощник"
+        verbose_name_plural = "Поисковой помощник"
 
 
