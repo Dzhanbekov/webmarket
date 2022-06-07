@@ -1,7 +1,3 @@
-import io
-from django.core.files.base import ContentFile
-
-from PIL import Image
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -118,8 +114,6 @@ class MainPageIcon(models.Model):
     class Meta:
         verbose_name = 'Фото для главной страницы'
         verbose_name_plural = 'Фото для главной страницы'
-
-
 
 
 class CallBack(models.Model):

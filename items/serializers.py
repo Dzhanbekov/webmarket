@@ -1,8 +1,9 @@
+from colorfield.serializers import ColorField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 
-from .models import Collection, Item, ItemImageColor, ItemCart, Order, SearchHelper
+from .models import Collection, Item, ItemImageColor, ItemCart, Order
 
 
 class CollectionGetSerializer(serializers.ModelSerializer):
@@ -63,37 +64,6 @@ class ImageItemSerializer(serializers.ModelSerializer):
             return None
         except ValueError:
             return None
-
-
-class ItemCreateSerializer(serializers.ModelSerializer):
-    """serializer for create item"""
-    itemimage = ImageItemSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Item
-        fields = ('id', 'title', 'item_id',
-                  'basic_price', 'price', 'discount',
-                  'description', 'size_range',
-                  'amount_in',
-                  'compound', 'material', 'is_in_cart', 'itemimage', 'collection', 'is_in_favourite'
-                  )
-
-    def create(self, validated_data):
-        return Item.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.item_id = validated_data.get('item_id', instance.item_id)
-        instance.title = validated_data.get('title', instance.title)
-        instance.description = validated_data.get('description', instance.description)
-        instance.price = validated_data.get('basic_price', instance.old_price)
-        instance.new_price = validated_data.get('price', instance.new_price)
-        instance.collection = validated_data.get('collection', instance.collection)
-        instance.material = validated_data.get('material', instance.material)
-        instance.compound = validated_data.get('compound', instance.compound)
-        instance.size_range = validated_data.get('size_range', instance.size_range)
-        instance.amount_in = validated_data.get('amount_in', instance.amount_in)
-        instance.save()
-        return instance
 
 
 class ItemsListSerializer(serializers.ModelSerializer):
@@ -171,11 +141,21 @@ class BasketCreateSerializer(serializers.ModelSerializer):
             'id',
             'item',
             'amount',
-            'order',
-            'color',
+            'image',
         )
 
         read_only_fields = ('id',)
+
+    def get_image_url(self, obj):
+        try:
+            request = self.context.get('context')
+            image_url = obj.image.path
+            print(self.context.get('context'))
+            return request.build_absolute_uri(image_url)
+        except AttributeError:
+            return None
+        except ValueError:
+            return None
 
 
 class BasketSerializer(serializers.ModelSerializer):
@@ -187,35 +167,66 @@ class BasketSerializer(serializers.ModelSerializer):
             'id',
             'item',
             'amount',
-            'order',
-            'color',
+            'image',
 
         )
 
         read_only_fields = ('id', 'amount',)
 
+    def get_image_url(self, obj):
+        try:
+            request = self.context.get('context')
+            image_url = obj.image.path
+            print(self.context.get('context'))
+            return request.build_absolute_uri(image_url)
+        except AttributeError:
+            return None
+        except ValueError:
+            return None
+
+    def create(self, validated_data):
+        return ItemCart.objects.create(**validated_data)
+
+
+class ItemBasketSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Item
+        fields = ('title', 'size_range', 'price', 'basic_price')
+
 
 class BasketListSerializer(serializers.ModelSerializer):
     """serializer for list items in basket"""
-    item = ItemsListSerializer()
+    item = ItemBasketSerializer()
+    image = ImageItemSerializer()
 
     class Meta:
         model = ItemCart
         fields = (
             'id',
             'item',
+            'image',
             'amount',
-            'order',
+
         )
 
-        read_only_fields = ('id', 'amount', 'order',)
+        read_only_fields = ('id', 'amount',)
 
 
 class OrderSerializer(serializers.ModelSerializer):
     """serializer for create order"""
     class Meta:
         model = Order
-        fields = '__all__'
+        exclude = ('order_status',)
+        read_only_fields = (''
+                            'id',
+                            'item_quantity',
+                            'line_quantity',
+                            'price_before_discount',
+                            'price_after_discount',
+                            'sum_of_discount'
+                            )
+
 
     def create(self, validated_data):
         return Order.objects.create(**validated_data)
@@ -226,8 +237,3 @@ class OrderSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class SearchHelperSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = SearchHelper
-        fields = '__all__'
