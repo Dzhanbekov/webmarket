@@ -46,7 +46,7 @@ class Item(models.Model):
     is_novelty = models.BooleanField(default=False, blank=True, null=True, verbose_name='новинка?')
     is_bestseller = models.BooleanField(default=False, blank=True, null=True, verbose_name='хит продаж?')
     collection = models.ForeignKey(Collection, models.CASCADE, verbose_name='Коллекция', related_name='itemcollection')
-    date = models.DateField(verbose_name='дата добавления',  blank=True, null=True)
+    date = models.DateField(verbose_name='дата добавления', auto_now_add=True)
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
@@ -75,7 +75,7 @@ class ItemImageColor(models.Model):
         verbose_name_plural = "фотографии товара"
 
     def __str__(self):
-        return f'{self.item} - {self.custom_color}'
+        return f'{self.item} - {self.custom_color} - photo'
 
 
 class Order(models.Model):
@@ -95,6 +95,11 @@ class Order(models.Model):
         blank=True,
         null=True
     )
+    item_quantity = models.IntegerField(verbose_name="Количество товаров", default=0)
+    line_quantity = models.IntegerField(verbose_name="Количество линеек", default=0)
+    price_before_discount = models.IntegerField(verbose_name="Общая цена без скидки", default=0)
+    price_after_discount = models.IntegerField(verbose_name="Общая цена со скидкой", default=0)
+    sum_of_discount = models.IntegerField(verbose_name="сумма скидки", default=0)
 
     def __str__(self):
         return f'{self.created_at.day}/' \
@@ -102,18 +107,41 @@ class Order(models.Model):
                f'{self.created_at.year} - ' \
                f'{self.name} - status {self.order_status}'
 
+    def save(
+            self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        self.item_quantity = ItemCart.get_total_quantity_of_item()
+        self.line_quantity = ItemCart.get_total_quantity_of_item_line()
+        self.price_before_discount = ItemCart.get_total_price_of_item_before_discount()
+        self.price_after_discount = ItemCart.get_total_price_of_item_after_discount()
+        self.sum_of_discount = self.price_before_discount - self.price_after_discount
+        super(Order, self).save()
+
     class Meta:
         verbose_name = "Заказ"
         verbose_name_plural = "Заказы"
 
 
+class OrderItem(models.Model):
+    item = models.ForeignKey(Item, verbose_name="товар", on_delete=models.CASCADE)
+    title = models.CharField(verbose_name="описание", max_length=200)
+    order = models.ForeignKey(Order, verbose_name="Заказ", on_delete=models.CASCADE)
+    image = models.ForeignKey(ItemImageColor, verbose_name="Фото", on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return f'{self.item} - {self.order}'
+
+    class Meta:
+        verbose_name = "Объект заказа"
+        verbose_name_plural = "Объекты заказа"
+
+
 class ItemCart(models.Model):
-    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="order_item", verbose_name="Продукт")
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="order_item", verbose_name="Продукт",  blank=True, null=True)
     amount = models.PositiveIntegerField(default=1, verbose_name="Количество линеек", blank=True, null=True)
     amount_item = models.PositiveIntegerField(default=0, verbose_name='количество товаров', blank=True, null=True)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_item", verbose_name="Заказ")
     price = models.PositiveIntegerField(verbose_name='цена', default=0, blank=True, null=True)
-    color = models.ForeignKey(ItemImageColor, on_delete=models.CASCADE, blank=True, null=True, verbose_name='цвет')
+    image = models.ForeignKey(ItemImageColor, on_delete=models.CASCADE, verbose_name='цвет', blank=True, null=True)
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
@@ -153,22 +181,11 @@ class ItemCart(models.Model):
         return total
 
     def __str__(self):
-        return f'{self.item}: {self.amount_item} - {self.item.price * self.amount} -- {self.order}'
+        return f'{self.id} -- {self.item}: {self.amount_item} - {self.item.price * self.amount}'
 
     class Meta:
         verbose_name = "Корзина"
         verbose_name_plural = "Корзины"
 
-
-class SearchHelper(models.Model):
-    name = models.CharField(max_length=250)
-    counter = models.IntegerField()
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = "Поисковой помощник"
-        verbose_name_plural = "Поисковой помощник"
 
 

@@ -1,21 +1,18 @@
 from random import choice
-
-from django.db.models import Q, Max, Count
+from django.http import Http404
 from django.shortcuts import render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import filters
+from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, RetrieveAPIView
 
-from .models import Collection, Item, ItemImageColor, ItemCart, Order, SearchHelper
-from .serializers import CollectionGetSerializer, CollectionCreateSerializer, ItemsDetailSerializer, \
-    ItemsListSerializer, ItemCreateSerializer, BasketSerializer, BasketListSerializer, \
-    BasketCreateSerializer, OrderSerializer, SearchHelperSerializer, ItemsFavouriteSerializer
-
-from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, CreateAPIView, \
-    UpdateAPIView, RetrieveAPIView
+from .models import Collection, Item, ItemCart, Order, OrderItem
+from .serializers import CollectionGetSerializer, ItemsDetailSerializer, \
+    ItemsListSerializer, BasketSerializer, BasketListSerializer, \
+    BasketCreateSerializer, OrderSerializer, ItemsFavouriteSerializer
 
 
 class CustomPagination(PageNumberPagination):
@@ -82,54 +79,20 @@ class ItemAPIView(RetrieveAPIView):
         return context
 
 
-# class ItemListView(ListAPIView):
-#     '''view for items list and filtering'''
-#
-#     serializer_class = ItemsListSerializer
-#     queryset = Item.objects.all().order_by('-id')
-#     pagination_class = CustomPagination
-#     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-#     filterset_fields = ['collection', 'is_bestseller', 'is_novelty', 'is_in_favourite']
-#     search_fields = ['title', 'collection__name']
-#
-#     def get_serializer_context(self):
-#         context = super(ItemListView, self).get_serializer_context()
-#         context.update({"context": self.request})
-#         return context
-
 class ItemListView(ListAPIView):
     '''view for items list and filtering'''
 
     serializer_class = ItemsListSerializer
     queryset = Item.objects.all().order_by('-id')
     pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['collection', 'is_bestseller', 'is_novelty', 'is_in_favourite']
+    search_fields = ['title', 'collection__name']
 
-    def get(self, request, *args, **kwargs):
-        queryset = self.queryset
-        search = self.request.query_params.get('search')
-        collection = self.request.query_params.get('collection__id')
-        is_bestseller = self.request.query_params.get('is_bestseller')
-        is_novelty = self.request.query_params.get('is_novelty')
-        is_in_favourite = self.request.query_params.get('is_in_favourite')
-
-        if search is not None:
-            queryset = queryset.filter(Q(title__icontains=search) | Q(collection__name__icontains=search))
-        if collection is not None:
-            queryset = queryset.filter(collection__id=collection)
-        if is_bestseller is not None:
-            queryset = queryset.filter(is_bestseller=is_bestseller)[:8]
-        if is_novelty is not None:
-            queryset = queryset.filter(is_novelty=is_novelty)[:4]
-        if is_in_favourite is not None:
-            queryset = queryset.filter(is_in_favourite=is_in_favourite)
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True, context={"context": request})
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    def get_serializer_context(self):
+        context = super(ItemListView, self).get_serializer_context()
+        context.update({"context": self.request})
+        return context
 
 
 class SameItemListView(ListAPIView):
@@ -153,7 +116,7 @@ class APIBasketCreateView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(
-            data=request.data, context={'request': request})
+            data=request.data, context={'context': request})
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -170,44 +133,18 @@ class APIBasketDeleteAllView(APIView):
         return Response(status=204)
 
 
-class APIAddBasketView(APIView):
-    '''view for show all items in basket and plus and minus quantity items in basket'''
-
+class DeleteOneAmountBasketView(APIView):
+    """method for delete amount in basket by one"""
     serializer_class = BasketSerializer
     model = ItemCart
 
-    def get(self, request, *args, **kwargs):
-        queryset = ItemCart.objects.all()
-        serializer = BasketListSerializer(queryset, many=True, context={'context': request})
-        return Response(serializer.data)
-
-    """method for add amount in basket by 1"""
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer = self.serializer_class(data=request.data, context={'context': request})
         serializer.is_valid(raise_exception=True)
         item = serializer.validated_data['item']
-        order = serializer.validated_data['order']
-        if ItemCart.objects.filter(item=item, order=order).exists():
-            orderitem = ItemCart.objects.filter(item=item, order=order).first()
-            orderitem.amount += 1
-            orderitem.save()
-
-        else:
-            orderitem = ItemCart.objects.create(
-                item=item,
-                amount=1,
-                order=order
-            )
-            return Response({'amount': orderitem.amount}, status=201)
-        return Response({'amount': orderitem.amount}, status=200)
-
-    """method for delete amount in basket by one"""
-    def delete(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        item = serializer.validated_data['item']
-        if ItemCart.objects.filter(item=item).exists():
-            orderitem = ItemCart.objects.filter(item=item).first()
+        image = serializer.validated_data['image']
+        if ItemCart.objects.filter(item=item, image=image).exists():
+            orderitem = ItemCart.objects.filter(item=item, image=image).first()
             orderitem.amount -= 1
             orderitem.save()
             if orderitem.amount < 1:
@@ -216,6 +153,52 @@ class APIAddBasketView(APIView):
 
         else:
             return Response({'amount': 0}, status=200)
+        return Response({'amount': orderitem.amount}, status=200)
+
+
+class DeleteByPKBasketView(APIView):
+
+    def get_object(self, pk):
+        try:
+            return ItemCart.objects.get(pk=pk)
+        except ItemCart.DoesNotExist:
+            raise Http404
+
+    def delete(self, request, pk, format=None):
+        basket = self.get_object(pk)
+        basket.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class APIAddBasketView(APIView):
+    '''view for show all items in basket and plus and minus quantity items in basket'''
+
+    serializer_class = BasketSerializer
+    model = ItemCart
+
+    def get(self, request, *args, **kwargs):
+        queryset = ItemCart.objects.all()
+        serializer = BasketListSerializer(queryset, many=True, context={"context": request})
+        return Response(serializer.data)
+
+    """method for add amount in basket by 1"""
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'context': request})
+        serializer.is_valid(raise_exception=True)
+        item = serializer.validated_data['item']
+        image = serializer.validated_data['image']
+        if ItemCart.objects.filter(item=item, image=image).exists():
+            orderitem = ItemCart.objects.filter(item=item, image=image).first()
+            orderitem.amount += 1
+            orderitem.save()
+
+        else:
+            orderitem = ItemCart.objects.create(
+                item=item,
+                image=image,
+                amount=1,
+            )
+            return Response({'amount': orderitem.amount}, status=201)
         return Response({'amount': orderitem.amount}, status=200)
 
 
@@ -240,10 +223,17 @@ class APIBasketTotalPriceView(APIView):
 
 
 class OrderCreateView(CreateAPIView):
-    """view for create order"""
-
-    queryset = Order.objects.all()
     serializer_class = OrderSerializer
+    queryset = Order.objects.all()
+
+    def perform_create(self, serializer):
+        order = serializer.save()
+
+        for i in ItemCart.objects.all():
+            OrderItem.objects.create(item=i.item, title=i.item.title, image=i.image, order=order)
+
+        self.queryset.update(order_status="FRAMED")
+        ItemCart.objects.all().delete()
 
 
 class ItemRandomView(APIView):
