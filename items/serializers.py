@@ -172,6 +172,7 @@ class BasketCreateSerializer(serializers.ModelSerializer):
             'item',
             'amount',
             'order',
+            'color',
         )
 
         read_only_fields = ('id',)
@@ -187,6 +188,7 @@ class BasketSerializer(serializers.ModelSerializer):
             'item',
             'amount',
             'order',
+            'color',
 
         )
 

@@ -4,6 +4,8 @@ from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.models import User
 
+ORDER_STATUS = [('NEW', 'НОВЫЙ'), ('FRAMED', 'ОФОРМЛЕН'), ('CANCELED', 'ОТМЕНЕН')]
+
 
 def validate_slash(value):
     one = value[0:2]
@@ -72,6 +74,9 @@ class ItemImageColor(models.Model):
         verbose_name = "фотографии товара"
         verbose_name_plural = "фотографии товара"
 
+    def __str__(self):
+        return f'{self.item} - {self.custom_color}'
+
 
 class Order(models.Model):
     name = models.CharField(max_length=150, verbose_name='Имя')
@@ -82,13 +87,20 @@ class Order(models.Model):
     country = models.CharField(max_length=150, verbose_name='Страна')
     city = models.CharField(max_length=150, verbose_name='Город')
     agreement = models.BooleanField(default=False, verbose_name='Согласие с условиями публичной оферты')
+    order_status = models.CharField(
+        max_length=12,
+        choices=ORDER_STATUS,
+        verbose_name='статус заказа',
+        default='NEW',
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
-        return f'{self.created_at.year}/' \
+        return f'{self.created_at.day}/' \
                f'{self.created_at.month}/' \
-               f'{self.created_at.day} ' \
-               f'{self.created_at.hour}:{self.created_at.minute} - '\
-               f'{self.name}'
+               f'{self.created_at.year} - ' \
+               f'{self.name} - status {self.order_status}'
 
     class Meta:
         verbose_name = "Заказ"
@@ -101,6 +113,7 @@ class ItemCart(models.Model):
     amount_item = models.PositiveIntegerField(default=0, verbose_name='количество товаров', blank=True, null=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_item", verbose_name="Заказ")
     price = models.PositiveIntegerField(verbose_name='цена', default=0, blank=True, null=True)
+    color = models.ForeignKey(ItemImageColor, on_delete=models.CASCADE, blank=True, null=True, verbose_name='цвет')
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
@@ -140,7 +153,7 @@ class ItemCart(models.Model):
         return total
 
     def __str__(self):
-        return f'{self.item}:{self.amount_item} - {self.item.price * self.amount}'
+        return f'{self.item}: {self.amount_item} - {self.item.price * self.amount} -- {self.order}'
 
     class Meta:
         verbose_name = "Корзина"
