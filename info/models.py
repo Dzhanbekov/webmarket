@@ -5,6 +5,8 @@ from PIL import Image
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 
+CALL_TYPE = [('YES', 'ДА'), ('NO', 'НЕТ')]
+
 
 class AboutUs(models.Model):
     description = models.TextField(verbose_name='О нас')
@@ -82,6 +84,15 @@ class Contacts(models.Model):
     def __str__(self):
         return f'{self.phone_number}'
 
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        self.whatsapp_link = 'https://wa.me/' + self.whatsapp_link
+        self.telegram_link = 'https://t.me/' + self.telegram_link
+        self.instagram_link = 'https://www.instagram.com/' + self.instagram_link
+
+        super(Contacts, self).save()
+
     class Meta:
         verbose_name = 'Контакты'
         verbose_name_plural = 'Контакты'
@@ -109,7 +120,6 @@ class MainPageIcon(models.Model):
         verbose_name_plural = 'Фото для главной страницы'
 
 
-CALL_TYPE = [('YES', 'ДА'), ('NO', 'НЕТ')]
 
 
 class CallBack(models.Model):

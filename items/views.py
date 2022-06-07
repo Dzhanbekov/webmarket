@@ -1,3 +1,5 @@
+from random import choice
+
 from django.db.models import Q, Max, Count
 from django.shortcuts import render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -5,6 +7,7 @@ from rest_framework import viewsets, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import filters
 
 from .models import Collection, Item, ItemImageColor, ItemCart, Order, SearchHelper
 from .serializers import CollectionGetSerializer, CollectionCreateSerializer, ItemsDetailSerializer, \
@@ -19,14 +22,6 @@ class CustomPagination(PageNumberPagination):
     '''class for pagination'''
 
     page_size = 8
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-
-class Custom12Pagination(PageNumberPagination):
-    '''class for pagination'''
-
-    page_size = 12
     page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -87,6 +82,21 @@ class ItemAPIView(RetrieveAPIView):
         return context
 
 
+# class ItemListView(ListAPIView):
+#     '''view for items list and filtering'''
+#
+#     serializer_class = ItemsListSerializer
+#     queryset = Item.objects.all().order_by('-id')
+#     pagination_class = CustomPagination
+#     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+#     filterset_fields = ['collection', 'is_bestseller', 'is_novelty', 'is_in_favourite']
+#     search_fields = ['title', 'collection__name']
+#
+#     def get_serializer_context(self):
+#         context = super(ItemListView, self).get_serializer_context()
+#         context.update({"context": self.request})
+#         return context
+
 class ItemListView(ListAPIView):
     '''view for items list and filtering'''
 
@@ -104,15 +114,12 @@ class ItemListView(ListAPIView):
 
         if search is not None:
             queryset = queryset.filter(Q(title__icontains=search) | Q(collection__name__icontains=search))
-            if queryset:
-                SearchHelper.objects.update_or_create(name=search, counter=+1)
-
         if collection is not None:
             queryset = queryset.filter(collection__id=collection)
         if is_bestseller is not None:
-            queryset = queryset.filter(is_bestseller=is_bestseller)
+            queryset = queryset.filter(is_bestseller=is_bestseller)[:8]
         if is_novelty is not None:
-            queryset = queryset.filter(is_novelty=is_novelty)
+            queryset = queryset.filter(is_novelty=is_novelty)[:4]
         if is_in_favourite is not None:
             queryset = queryset.filter(is_in_favourite=is_in_favourite)
 
@@ -123,45 +130,6 @@ class ItemListView(ListAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
-
-class ItemRandomView(APIView):
-    '''view for random 5 item list'''
-
-    serializer_class = ItemsListSerializer
-    queryset = Item.objects.all()
-
-    def get(self, request, *args, **kwargs):
-        queryset = Item.objects.order_by('?')[:5]
-        serializer = self.serializer_class(queryset, many=True, context={'context': request})
-        return Response(serializer.data)
-
-
-class SearchHelperView(ListAPIView):
-    """view for get list search text"""
-
-    queryset = SearchHelper.objects.all()
-    serializer_class = SearchHelperSerializer
-
-    def get(self, request, *args, **kwargs):
-        queryset = SearchHelper.objects.all().order_by('-counter')
-        search = self.request.query_params.get('search')
-
-        if search is not None:
-            queryset = queryset.filter(title__icontains=search)
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
-
-
-class NoveltyListView(ListAPIView):
-    serializer_class = ItemsListSerializer
-    queryset = Item.objects.filter(is_novelty=True)
-    pagination_class = Custom5Pagination
-
-    def get_serializer_context(self):
-        context = super(NoveltyListView, self).get_serializer_context()
-        context.update({"context": self.request})
-        return context
 
 
 class SameItemListView(ListAPIView):
@@ -277,3 +245,15 @@ class OrderCreateView(CreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
+
+class ItemRandomView(APIView):
+    '''view for random 5 item list'''
+
+    serializer_class = ItemsListSerializer
+    queryset = Item.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        collection = list(Collection.objects.all().values_list('id', flat=True))
+        queryset = list(choice(Item.objects.filter(collection_id=pk)) for pk in collection)
+        serializer = self.serializer_class(queryset, many=True, context={'context': request})
+        return Response(serializer.data)
