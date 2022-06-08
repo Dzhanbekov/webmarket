@@ -227,9 +227,18 @@ class OrderSerializer(serializers.ModelSerializer):
                             'sum_of_discount'
                             )
 
-
     def create(self, validated_data):
         return Order.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.lastname = validated_data.get('lastname', instance.lastname)
+        instance.email = validated_data.get('email', instance.email)
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.created_at = validated_data.get('created_at', instance.created_at)
+        instance.country = validated_data.get('country', instance.country)
+        instance.city = validated_data.get('city', instance.city)
+        instance.agreement = validated_data.get('agreement', instance.agreement)
 
     def validate(self, attrs):
         if attrs['agreement'] == False:

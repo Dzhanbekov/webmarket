@@ -32,7 +32,7 @@ class Custom5Pagination(PageNumberPagination):
 
 
 class CollectionListView(ListAPIView):
-    '''view for  collections List'''
+    '''view for collections List'''
 
     serializer_class = CollectionGetSerializer
     queryset = Collection.objects.all().order_by('-id')
@@ -96,6 +96,8 @@ class ItemListView(ListAPIView):
 
 
 class SameItemListView(ListAPIView):
+    """return same 5 item by collection """
+
     serializer_class = ItemsListSerializer
     queryset = Item.objects.order_by('-id')
     filter_backends = [DjangoFilterBackend]
@@ -147,7 +149,7 @@ class DeleteOneAmountBasketView(APIView):
             orderitem = ItemCart.objects.filter(item=item, image=image).first()
             orderitem.amount -= 1
             orderitem.save()
-            if orderitem.amount < 1:
+            if orderitem.amount <= 1:
                 orderitem.delete()
                 return Response({'amount': orderitem.amount}, status=204)
 
@@ -157,6 +159,7 @@ class DeleteOneAmountBasketView(APIView):
 
 
 class DeleteByPKBasketView(APIView):
+    """delete one object from basket"""
 
     def get_object(self, pk):
         try:
@@ -171,11 +174,12 @@ class DeleteByPKBasketView(APIView):
 
 
 class APIAddBasketView(APIView):
-    '''view for show all items in basket and plus and minus quantity items in basket'''
+    '''view for show all items in basket add amount item by one in basket'''
 
     serializer_class = BasketSerializer
     model = ItemCart
 
+    """method for list all item in the basket"""
     def get(self, request, *args, **kwargs):
         queryset = ItemCart.objects.all()
         serializer = BasketListSerializer(queryset, many=True, context={"context": request})
@@ -226,6 +230,8 @@ class OrderCreateView(CreateAPIView):
     serializer_class = OrderSerializer
     queryset = Order.objects.all()
 
+    """create order and save it in order item, 
+    after saved delete all item in the basket, and update order status to framed"""
     def perform_create(self, serializer):
         order = serializer.save()
 
@@ -244,6 +250,6 @@ class ItemRandomView(APIView):
 
     def get(self, request, *args, **kwargs):
         collection = list(Collection.objects.all().values_list('id', flat=True))
-        queryset = list(choice(Item.objects.filter(collection_id=pk)) for pk in collection)
+        queryset = list(choice(self.queryset.filter(collection_id=pk)) for pk in collection)[:5]
         serializer = self.serializer_class(queryset, many=True, context={'context': request})
         return Response(serializer.data)

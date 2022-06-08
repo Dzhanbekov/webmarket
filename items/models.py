@@ -51,8 +51,9 @@ class Item(models.Model):
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
-        percent = self.basic_price * self.discount / 100
-        self.price = self.basic_price - percent
+        if self.discount:
+            percent = self.basic_price * self.discount / 100
+            self.price = self.basic_price - percent
         self.amount_in = (int(self.size_range[3:]) - int(self.size_range[0:2]) + 2) // 2
         super(Item, self).save()
         super(Item, self).save()
@@ -132,8 +133,8 @@ class OrderItem(models.Model):
         return f'{self.item} - {self.order}'
 
     class Meta:
-        verbose_name = "Объект заказа"
-        verbose_name_plural = "Объекты заказа"
+        verbose_name = "Заказанный товар"
+        verbose_name_plural = "Заказанные товары"
 
 
 class ItemCart(models.Model):

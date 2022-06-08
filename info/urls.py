@@ -1,9 +1,8 @@
 from django.urls import path, include
 from .views import AboutUsView, NewsView, OfferView, HelpView, \
-    ContactView, AdvantagesView, MainPageView, CallBackView, IconHelpView, NewsViewDetail, HelpDetailView
+    ContactView, AdvantagesView, MainPageView, CallBackView, NewsViewDetail, HelpDetailView
 
 urlpatterns = [
-    path('icon/', IconHelpView.as_view()),
     path('about/', AboutUsView.as_view()),
     path('news/', NewsView.as_view()),
     path('news/<int:pk>/', NewsViewDetail.as_view()),

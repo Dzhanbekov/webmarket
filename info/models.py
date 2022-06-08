@@ -5,6 +5,8 @@ CALL_TYPE = [('YES', 'ДА'), ('NO', 'НЕТ')]
 
 
 class AboutUs(models.Model):
+    """model for about us"""
+
     description = models.TextField(verbose_name='О нас')
     image_1 = models.ImageField(upload_to='about')
     image_2 = models.ImageField(upload_to='about')
@@ -19,6 +21,7 @@ class AboutUs(models.Model):
 
 
 class News(models.Model):
+    """model for news"""
 
     title = models.CharField(max_length=200, verbose_name='Заголовок')
     description = models.TextField(verbose_name='Описание')
@@ -32,19 +35,9 @@ class News(models.Model):
         verbose_name_plural = 'Новости'
 
 
-class Help(models.Model):
-    question = models.CharField(max_length=200, verbose_name='Вопрос')
-    answer = models.TextField(verbose_name='Ответ')
-
-    def __str__(self):
-        return self.question
-
-    class Meta:
-        verbose_name = 'Помощь'
-        verbose_name_plural = 'Помощь'
-
-
 class HelpIcon(models.Model):
+    """model for one icon to help"""
+
     icon = models.ImageField(upload_to='help')
 
     def __str__(self):
@@ -55,7 +48,26 @@ class HelpIcon(models.Model):
         verbose_name_plural = 'Иконка для помощи'
 
 
+class Help(models.Model):
+    """model for help(question and answer)"""
+
+    question = models.CharField(max_length=200, verbose_name='Вопрос')
+    answer = models.TextField(verbose_name='Ответ')
+    icon = models.ForeignKey(HelpIcon, on_delete=models.DO_NOTHING, blank=True, null=True, related_name='helpicon')
+
+    def __str__(self):
+        return self.question
+
+    class Meta:
+        verbose_name = 'Помощь'
+        verbose_name_plural = 'Помощь'
+
+
+
+
 class Offer(models.Model):
+    """model for public offer"""
+
     title = models.CharField(max_length=200, verbose_name='Заголовок', default='Публичная оферта')
     text = models.TextField()
 
@@ -68,6 +80,8 @@ class Offer(models.Model):
 
 
 class Contacts(models.Model):
+    """model for footer information"""
+
     header = models.ImageField(upload_to='header')
     footer = models.ImageField(upload_to='footer')
     email = models.EmailField(max_length=150, verbose_name='Электронная почта')
@@ -83,9 +97,20 @@ class Contacts(models.Model):
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
-        self.whatsapp_link = 'https://wa.me/' + self.whatsapp_link
-        self.telegram_link = 'https://t.me/' + self.telegram_link
-        self.instagram_link = 'https://www.instagram.com/' + self.instagram_link
+        if 'https://wa.me/' in self.whatsapp_link:
+            pass
+        else:
+            self.whatsapp_link = 'https://wa.me/' + self.whatsapp_link
+
+        if 'https://t.me/' in self.telegram_link:
+            pass
+        else:
+            self.telegram_link = 'https://t.me/' + self.telegram_link
+
+        if 'https://www.instagram.com/' in self.instagram_link:
+            pass
+        else:
+            self.instagram_link = 'https://www.instagram.com/' + self.instagram_link
 
         super(Contacts, self).save()
 
@@ -95,6 +120,8 @@ class Contacts(models.Model):
 
 
 class Advantages(models.Model):
+    """model for company's advantages"""
+
     icon = models.ImageField(upload_to='advantages', verbose_name='Иконка')
     title = models.CharField(max_length=200, verbose_name='Заголовок')
     text = models.TextField(verbose_name='Описание')
@@ -108,6 +135,8 @@ class Advantages(models.Model):
 
 
 class MainPageIcon(models.Model):
+    """model for main page slider"""
+
     icon = models.ImageField(upload_to='mainpage', verbose_name='Иконка')
     link = models.CharField(max_length=200, verbose_name='ссылка', blank=True, null=True)
 
@@ -117,6 +146,8 @@ class MainPageIcon(models.Model):
 
 
 class CallBack(models.Model):
+    """model for callback"""
+
     name = models.CharField(max_length=200, verbose_name='имя')
     phone_number = PhoneNumberField(verbose_name='Номер телефона', unique=False)
     reason = models.CharField(max_length=200, verbose_name='тип обращения', default="обратный звонок")

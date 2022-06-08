@@ -9,15 +9,21 @@ urlpatterns = [
     path('<int:pk>/', ItemAPIView.as_view(), name='item-detail'),
     path('collections/', CollectionListView.as_view(), name='collections-list'),
     path('collections/<int:pk>/', CollectionAPIView.as_view(), name='collection-detail'),
+    path('same/', SameItemListView.as_view(), name='same'),
+    path('favourite/<int:pk>/', ItemFavouriteUpdateView.as_view()),
+    path('random/', ItemRandomView.as_view()),
+
+]
+
+basket_url = [
     path('basket/create/', APIBasketCreateView.as_view(), name='basket-create'),
     path('basket/delete-all/', APIBasketDeleteAllView.as_view(), name='basket-delete-all'),
     path('basket/add/', APIAddBasketView.as_view(), name='basket'),
     path('basket/del/', DeleteOneAmountBasketView.as_view(), name='basket-del'),
     path('basket/total/', APIBasketTotalPriceView.as_view(), name='basket-total'),
     path('basket/remove/<int:pk>/', DeleteByPKBasketView.as_view(), name='basket-total'),
-    path('same/', SameItemListView.as_view(), name='same'),
     path('order/', OrderCreateView.as_view(), name='order'),
-    path('favourite/<int:pk>/', ItemFavouriteUpdateView.as_view()),
-    path('random/', ItemRandomView.as_view()),
 
 ]
+
+urlpatterns += basket_url
