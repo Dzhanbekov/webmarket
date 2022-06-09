@@ -21,14 +21,27 @@ class PhotoAdmin(admin.StackedInline):
 class ItemAdmin(admin.ModelAdmin):
     inlines = [PhotoAdmin]
     form = ItemAdminForm
+    list_display = ['id', 'title', 'collection']
+    list_display_links = ['id', 'title']
+    list_filter = ['collection']
 
     class Meta:
         model = Item
 
 
-admin.site.register(Collection)
+@admin.register(Collection)
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name']
+    list_display_links = ['id', 'name']
+
+
+@admin.register(ItemCart)
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'item', "amount_item", "amount"]
+    list_display_links = ['id', 'item']
+
+
 admin.site.register(Order)
-admin.site.register(ItemCart)
 admin.site.register(OrderItem)
 admin.site.site_header = "ZEON store Admin"
 admin.site.site_title = "ZEON Admin Portal"
