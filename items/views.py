@@ -12,21 +12,13 @@ from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, R
 from .models import Collection, Item, ItemCart, Order, OrderItem
 from .serializers import CollectionGetSerializer, ItemsDetailSerializer, \
     ItemsListSerializer, BasketSerializer, BasketListSerializer, \
-    BasketCreateSerializer, OrderSerializer, ItemsFavouriteSerializer
+    BasketCreateSerializer, OrderSerializer, ItemsFavouriteSerializer, OrderListSerializer, OrderDetailSerializer
 
 
 class CustomPagination(PageNumberPagination):
     '''class for pagination'''
 
     page_size = 8
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-
-class Custom5Pagination(PageNumberPagination):
-    '''class for pagination'''
-
-    page_size = 5
     page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -99,15 +91,35 @@ class SameItemListView(ListAPIView):
     """return same 5 item by collection """
 
     serializer_class = ItemsListSerializer
-    queryset = Item.objects.order_by('-id')
-    filter_backends = [DjangoFilterBackend]
-    filter_fields = ['collection']
-    pagination_class = Custom5Pagination
 
     def get_serializer_context(self):
         context = super(SameItemListView, self).get_serializer_context()
         context.update({"context": self.request})
         return context
+
+    def get_queryset(self):
+        queryset = Item.objects.all()
+        collection = self.request.query_params.get('collection_id')
+        if collection is not None:
+            queryset = queryset.filter(collection__id=collection).order_by('?')[:5]
+        return queryset
+
+
+class NoveltyItemView(ListAPIView):
+    """return 4 novelty item for main page"""
+    serializer_class = ItemsListSerializer
+
+    def get_serializer_context(self):
+        context = super(NoveltyItemView, self).get_serializer_context()
+        context.update({"context": self.request})
+        return context
+
+    def get_queryset(self):
+        queryset = Item.objects.all()
+        novelty = self.request.query_params.get('is_novelty')
+        if novelty is not None:
+            queryset = queryset.filter(is_novelty=novelty).order_by('-id')[:4]
+        return queryset
 
 
 class APIBasketCreateView(CreateAPIView):
@@ -208,7 +220,7 @@ class APIAddBasketView(APIView):
 
 class APIBasketTotalPriceView(APIView):
     '''view for show total item price before and after discount in basket,
-        sum of discount and total item quantity an basket
+        sum of discount, total item quantity and total item quantity line in basket
     '''
 
     def get(self, request, *args, **kwargs):
@@ -219,7 +231,7 @@ class APIBasketTotalPriceView(APIView):
         amount = ItemCart.get_total_quantity_of_item_line()
 
         return Response({"Сумма товаров до скидки": total_before,
-                         'Сумма товаров после скидки': total_after,
+                         'итоговая цена': total_after,
                          'сумма скидки': discount,
                          'количество товаров в корзине': total_quantity,
                          'количество линеек в корзине': amount
@@ -227,11 +239,12 @@ class APIBasketTotalPriceView(APIView):
 
 
 class OrderCreateView(CreateAPIView):
+    """create order and save it in order item,
+        after saved delete all item in the basket, and update order status to framed"""
+
     serializer_class = OrderSerializer
     queryset = Order.objects.all()
 
-    """create order and save it in order item, 
-    after saved delete all item in the basket, and update order status to framed"""
     def perform_create(self, serializer):
         order = serializer.save()
 
@@ -243,13 +256,37 @@ class OrderCreateView(CreateAPIView):
 
 
 class ItemRandomView(APIView):
-    '''view for random 5 item list'''
+    '''view for return random 5 item list'''
 
     serializer_class = ItemsListSerializer
     queryset = Item.objects.all()
 
     def get(self, request, *args, **kwargs):
-        collection = list(Collection.objects.all().values_list('id', flat=True))
-        queryset = list(choice(self.queryset.filter(collection_id=pk)) for pk in collection)[:5]
-        serializer = self.serializer_class(queryset, many=True, context={'context': request})
-        return Response(serializer.data)
+        try:
+            collection = list(Collection.objects.values_list('id', flat=True).order_by('?'))
+            queryset = list(choice(self.queryset.filter(collection__id=pk)) for pk in collection)[:5]
+            serializer = self.serializer_class(queryset, many=True, context={'context': request})
+            return Response(serializer.data)
+        except IndexError:
+            queryset = self.queryset.order_by('?')[:5]
+            serializer = self.serializer_class(queryset, many=True, context={'context': request})
+            return Response(serializer.data)
+
+
+class OrderListView(ListAPIView):
+    """view for get list order"""
+
+    serializer_class = OrderListSerializer
+    queryset = Order.objects.all()
+
+
+class OrderDetailView(RetrieveAPIView):
+    """view for get order detail"""
+
+    serializer_class = OrderDetailSerializer
+    queryset = Order.objects.all()
+
+    def get_serializer_context(self):
+        context = super(OrderDetailView, self).get_serializer_context()
+        context.update({"context": self.request})
+        return context

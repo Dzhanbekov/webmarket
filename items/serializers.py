@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 
-from .models import Collection, Item, ItemImageColor, ItemCart, Order
+from .models import Collection, Item, ItemImageColor, ItemCart, Order, OrderItem
 
 
 class CollectionGetSerializer(serializers.ModelSerializer):
@@ -242,7 +242,60 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs['agreement'] == False:
-            raise ValidationError('нужно согласие с публичной офертой')
+            raise ValidationError('необходимо согласие с публичной офертой, нажмите на галочку')
         return attrs
 
 
+class OrderListSerializer(serializers.ModelSerializer):
+    """serializer for list order"""
+    class Meta:
+        model = Order
+        fields = ('id', 'name', 'lastname', 'phone_number', 'country', 'city', 'order_status')
+
+
+class ItemForOrderSerializer(serializers.ModelSerializer):
+    """item serializer for order item"""
+
+    class Meta:
+        model = Item
+        fields = ('title', 'size_range', 'price', 'basic_price')
+
+
+class ImageOrderSerializer(serializers.ModelSerializer):
+    """image color serializer for order item"""
+
+    image = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = ItemImageColor
+        fields = ('image', 'custom_color')
+
+    def get_image(self, obj):
+        try:
+            request = self.context.get('context')
+            image_url = obj.image.path
+            print(self.context.get('context'))
+            return request.build_absolute_uri(image_url)
+        except AttributeError:
+            return None
+        except ValueError:
+            return None
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    """order item serializer for order"""
+    item = ItemForOrderSerializer()
+    image = ImageOrderSerializer()
+
+    class Meta:
+        model = OrderItem
+        fields = ('item', 'image')
+
+
+class OrderDetailSerializer(serializers.ModelSerializer):
+    """order serializer for get detail order"""
+    orderitem = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        exclude = ('agreement', )

@@ -124,9 +124,9 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    item = models.ForeignKey(Item, verbose_name="товар", on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, verbose_name="товар", on_delete=models.CASCADE, related_name='itemorder')
     title = models.CharField(verbose_name="описание", max_length=200)
-    order = models.ForeignKey(Order, verbose_name="Заказ", on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, verbose_name="Заказ", on_delete=models.CASCADE, related_name='orderitem')
     image = models.ForeignKey(ItemImageColor, verbose_name="Фото", on_delete=models.CASCADE, null=True)
 
     def __str__(self):
@@ -146,7 +146,7 @@ class ItemCart(models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
-        if self.item.discount is not None:
+        if self.item.discount:
             self.price = self.item.price * self.amount
         else:
             self.price = self.item.basic_price * self.amount
