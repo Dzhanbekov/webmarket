@@ -58,7 +58,6 @@ class OfferSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class HelpSerializer(serializers.ModelSerializer):
     """serializer for help"""
     icon = serializers.SerializerMethodField(read_only=True)

@@ -12,7 +12,7 @@ from rest_framework import generics
 
 
 class CustomPagination(PageNumberPagination):
-    '''class for pagination'''
+    """class for pagination"""
 
     page_size = 8
     page_size_query_param = 'page_size'

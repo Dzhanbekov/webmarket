@@ -47,7 +47,7 @@ class CollectionCreateSerializer(serializers.ModelSerializer):
 
 
 class ImageItemSerializer(serializers.ModelSerializer):
-    '''serializer for item image and item color with full url image'''
+    """serializer for item image and item color with full url image"""
     image_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -189,7 +189,7 @@ class BasketSerializer(serializers.ModelSerializer):
 
 
 class ItemBasketSerializer(serializers.ModelSerializer):
-
+    """item serializer for get in ordered list"""
     class Meta:
         model = Item
         fields = ('title', 'size_range', 'price', 'basic_price')

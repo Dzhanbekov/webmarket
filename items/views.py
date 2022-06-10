@@ -16,7 +16,7 @@ from .serializers import CollectionGetSerializer, ItemsDetailSerializer, \
 
 
 class CustomPagination(PageNumberPagination):
-    '''class for pagination'''
+    """class for pagination"""
 
     page_size = 8
     page_size_query_param = 'page_size'
@@ -24,7 +24,7 @@ class CustomPagination(PageNumberPagination):
 
 
 class CollectionListView(ListAPIView):
-    '''view for collections List'''
+    """view for collections List"""
 
     serializer_class = CollectionGetSerializer
     queryset = Collection.objects.all().order_by('-id')
@@ -49,7 +49,7 @@ class ItemFavouriteUpdateView(UpdateAPIView):
 
 
 class CollectionAPIView(APIView):
-    '''view for collection get by pk  '''
+    """view for collection get by pk  """
 
     queryset = Collection.objects.all()
 
@@ -60,7 +60,7 @@ class CollectionAPIView(APIView):
 
 
 class ItemAPIView(RetrieveAPIView):
-    '''view for get item by pk '''
+    """view for get item by pk """
 
     queryset = Item.objects.all()
     serializer_class = ItemsDetailSerializer
@@ -72,7 +72,7 @@ class ItemAPIView(RetrieveAPIView):
 
 
 class ItemListView(ListAPIView):
-    '''view for items list and filtering'''
+    """view for items list and filtering"""
 
     serializer_class = ItemsListSerializer
     queryset = Item.objects.all().order_by('-id')
@@ -123,7 +123,7 @@ class NoveltyItemView(ListAPIView):
 
 
 class APIBasketCreateView(CreateAPIView):
-    '''create new basket'''
+    """create new basket"""
 
     serializer_class = BasketCreateSerializer
     queryset = ItemCart.objects.all()
@@ -139,7 +139,7 @@ class APIBasketCreateView(CreateAPIView):
 
 
 class APIBasketDeleteAllView(APIView):
-    '''delete all basket'''
+    """delete all basket"""
 
     def delete(self, request, *args, **kwargs):
         ItemCart.objects.all().delete()
@@ -186,18 +186,20 @@ class DeleteByPKBasketView(APIView):
 
 
 class APIAddBasketView(APIView):
-    '''view for show all items in basket add amount item by one in basket'''
+    """view for show all items in basket add amount item by one in basket"""
 
     serializer_class = BasketSerializer
     model = ItemCart
 
     """method for list all item in the basket"""
+
     def get(self, request, *args, **kwargs):
         queryset = ItemCart.objects.all()
         serializer = BasketListSerializer(queryset, many=True, context={"context": request})
         return Response(serializer.data)
 
     """method for add amount in basket by 1"""
+
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'context': request})
         serializer.is_valid(raise_exception=True)
@@ -219,10 +221,9 @@ class APIAddBasketView(APIView):
 
 
 class APIBasketTotalPriceView(APIView):
-    '''view for show total item price before and after discount in basket,
+    """view for show total item price before and after discount in basket,
         sum of discount, total item quantity and total item quantity line in basket
-    '''
-
+    """
     def get(self, request, *args, **kwargs):
         total_before = ItemCart.get_total_price_of_item_before_discount()
         total_after = ItemCart.get_total_price_of_item_after_discount()
@@ -256,7 +257,7 @@ class OrderCreateView(CreateAPIView):
 
 
 class ItemRandomView(APIView):
-    '''view for return random 5 item list'''
+    """view for return random 5 item list"""
 
     serializer_class = ItemsListSerializer
     queryset = Item.objects.all()
@@ -264,7 +265,7 @@ class ItemRandomView(APIView):
     def get(self, request, *args, **kwargs):
         try:
             collection = list(Collection.objects.values_list('id', flat=True).order_by('?'))
-            queryset = list(choice(self.queryset.filter(collection__id=pk)) for pk in collection)[:5]
+            queryset = list(choice(self.queryset.filter(collection__id=pk).order_by('?')) for pk in collection)[:5]
             serializer = self.serializer_class(queryset, many=True, context={'context': request})
             return Response(serializer.data)
         except IndexError:

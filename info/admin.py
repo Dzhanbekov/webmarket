@@ -1,8 +1,47 @@
+from functools import update_wrapper
+
+from django.views.generic import RedirectView
+
 from .models import AboutUs, News, Help, Offer, Contacts, MainPageIcon, Advantages, CallBack, \
     HelpIcon
 from django import forms
 from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
+
+
+class AdminUrl(admin.ModelAdmin):
+    def change_view(self, request, object_id=None, form_url='', extra_context=None):
+        try:
+            id = self.model.objects.all().first().id
+        except AttributeError:
+            return self.changeform_view(request, None, form_url, extra_context)
+
+        object_id = str(id)
+        return self.changeform_view(request, object_id, form_url, extra_context)
+
+    def get_urls(self):
+        from django.urls import path
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+
+            wrapper.model_admin = self
+            return update_wrapper(wrapper, view)
+
+        info = self.model._meta.app_label, self.model._meta.model_name
+
+        return [
+            path('', wrap(self.change_view), name='%s_%s_changelist' % info),
+            path('add/', wrap(self.add_view), name='%s_%s_add' % info),
+            path('<path:object_id>/history/', wrap(self.history_view), name='%s_%s_history' % info),
+            path('<path:object_id>/delete/', wrap(self.delete_view), name='%s_%s_delete' % info),
+            path('<path:object_id>/change/', wrap(self.change_view), name='%s_%s_change' % info),
+            # For backwards compatibility (was the change url before 1.9)
+            path('<path:object_id>/', wrap(RedirectView.as_view(
+                pattern_name='%s:%s_%s_change' % ((self.admin_site.name,) + info)
+            ))),
+        ]
 
 
 class NewsAdminForm(forms.ModelForm):
@@ -30,7 +69,7 @@ class NewsAdmin(admin.ModelAdmin):
 
 
 @admin.register(Offer)
-class OfferAdmin(admin.ModelAdmin):
+class OfferAdmin(AdminUrl):
     form = OfferAdminForm
 
     def has_add_permission(self, request):
@@ -47,7 +86,7 @@ class CallBackAdmin(admin.ModelAdmin):
 
 
 @admin.register(AboutUs)
-class AboutUsAdmin(admin.ModelAdmin):
+class AboutUsAdmin(AdminUrl):
 
     class Meta:
         model = AboutUs
@@ -59,10 +98,15 @@ class AboutUsAdmin(admin.ModelAdmin):
 
 
 @admin.register(Contacts)
-class ContactsAdmin(admin.ModelAdmin):
+class ContactsAdmin(AdminUrl):
 
     class Meta:
         model = Contacts
+
+    def has_add_permission(self, request):
+        if self.model.objects.count() >= 1:
+            return False
+        return super().has_add_permission(request)
 
 
 @admin.register(HelpIcon)
