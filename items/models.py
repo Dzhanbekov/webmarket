@@ -8,6 +8,7 @@ ORDER_STATUS = [('NEW', 'НОВЫЙ'), ('FRAMED', 'ОФОРМЛЕН'), ('CANCELE
 
 
 def validate_slash(value):
+    """validation method for size range"""
     one = value[0:2]
     two = value[3:]
     if str(one + two).isdecimal() and value[2] == '-'\
@@ -19,6 +20,8 @@ def validate_slash(value):
 
 
 class Collection(models.Model):
+    """collection model"""
+
     name = models.CharField(max_length=150, verbose_name='Наименование коллекции')
     image = models.ImageField(upload_to='collection', verbose_name='Картинка')
 
@@ -31,6 +34,8 @@ class Collection(models.Model):
 
 
 class Item(models.Model):
+    """model for product"""
+
     title = models.CharField(max_length=100, verbose_name='Описание товара')
     item_id = models.CharField(max_length=200, unique=True, verbose_name='Артикул', blank=True, null=True)
     basic_price = models.PositiveIntegerField('Основная Цена', default=0)
@@ -51,6 +56,8 @@ class Item(models.Model):
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
+        """save method for calculate percent to product price"""
+
         if self.discount:
             percent = self.basic_price * self.discount / 100
             self.price = self.basic_price - percent
@@ -67,6 +74,8 @@ class Item(models.Model):
 
 
 class ItemImageColor(models.Model):
+    """model for image and color for product"""
+
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='itemimage')
     image = models.ImageField(upload_to='item')
     custom_color = ColorField(default='#FF0000', verbose_name="Цвет")
@@ -80,6 +89,8 @@ class ItemImageColor(models.Model):
 
 
 class Order(models.Model):
+    """order model and information about ordered person"""
+
     name = models.CharField(max_length=150, verbose_name='Имя')
     lastname = models.CharField(max_length=150, verbose_name='Фамилия')
     email = models.EmailField(max_length=150, verbose_name='Электронная почта')
@@ -111,6 +122,9 @@ class Order(models.Model):
     def save(
             self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
+        """save method for ordered products total price,
+           item, item line, sum of discount and final price"""
+
         self.item_quantity = ItemCart.get_total_quantity_of_item()
         self.line_quantity = ItemCart.get_total_quantity_of_item_line()
         self.price_before_discount = ItemCart.get_total_price_of_item_before_discount()
@@ -124,6 +138,8 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
+    """model for save ordered products"""
+
     item = models.ForeignKey(Item, verbose_name="товар", on_delete=models.CASCADE, related_name='itemorder')
     title = models.CharField(verbose_name="описание", max_length=200)
     order = models.ForeignKey(Order, verbose_name="Заказ", on_delete=models.CASCADE, related_name='orderitem')
@@ -138,6 +154,8 @@ class OrderItem(models.Model):
 
 
 class ItemCart(models.Model):
+    """model basket for products"""
+
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="order_item", verbose_name="Продукт",  blank=True, null=True)
     amount = models.PositiveIntegerField(default=1, verbose_name="Количество линеек", blank=True, null=True)
     amount_item = models.PositiveIntegerField(default=0, verbose_name='количество товаров', blank=True, null=True)
@@ -146,6 +164,8 @@ class ItemCart(models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
+        """method save for save calculated products price to basket"""
+
         if self.item.discount:
             self.price = self.item.price * self.amount
         else:
@@ -155,6 +175,9 @@ class ItemCart(models.Model):
 
     @staticmethod
     def get_total_price_of_item_before_discount():
+        """method for calculate total products price
+           in basket before discount"""
+
         total = 0
         for orderitem in ItemCart.objects.all():
             total += orderitem.item.basic_price * orderitem.amount
@@ -162,6 +185,9 @@ class ItemCart(models.Model):
 
     @staticmethod
     def get_total_price_of_item_after_discount():
+        """method for calculate total products price
+           in basket after discount and it's final price"""
+
         total = 0
         for orderitem in ItemCart.objects.all():
             total += orderitem.item.price * orderitem.amount
@@ -169,13 +195,18 @@ class ItemCart(models.Model):
 
     @staticmethod
     def get_total_quantity_of_item():
+        """method for calculate total products in the basket"""
+
         total = 0
         for orderitem in ItemCart.objects.all():
             total += orderitem.amount_item
         return total
 
+
     @staticmethod
     def get_total_quantity_of_item_line():
+        """method for calculate total products line in the basket"""
+
         total = 0
         for orderitem in ItemCart.objects.all():
             total += orderitem.amount

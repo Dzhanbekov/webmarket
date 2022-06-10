@@ -5,6 +5,8 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
 
 class ItemAdminForm(forms.ModelForm):
+    """modelform for add ckeditor to item description"""
+
     description = forms.CharField(label='Описание', widget=CKEditorUploadingWidget())
 
     class Meta:
@@ -13,12 +15,16 @@ class ItemAdminForm(forms.ModelForm):
 
 
 class PhotoAdmin(admin.StackedInline):
+    """class for add item image color model to item admin"""
+
     model = ItemImageColor
     max_num = 8
 
 
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
+    """register item model to django admin"""
+
     inlines = [PhotoAdmin]
     form = ItemAdminForm
     list_display = ['id', 'title', 'collection']
@@ -41,7 +47,14 @@ class CollectionAdmin(admin.ModelAdmin):
     list_display_links = ['id', 'item']
 
 
-admin.site.register(Order)
+@admin.register(Order)
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', "lastname", "phone_number", "country", "order_status", "created_at"]
+    list_display_links = ['id', 'name']
+    list_filter = ['country', "order_status", "created_at"]
+    search_fields = ["name", "lastname"]
+
+
 admin.site.register(OrderItem)
 admin.site.site_header = "ZEON store Admin"
 admin.site.site_title = "ZEON Admin Portal"
