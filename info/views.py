@@ -1,13 +1,10 @@
-from django.shortcuts import render
-from django.views.generic import CreateView
-from rest_framework import status, viewsets
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from .models import AboutUs, News, Help, Offer, Contacts, MainPageIcon, Advantages, CallBack, HelpIcon
+from .models import AboutUs, News, Help, Offer, Contacts, MainPageIcon, Advantages, CallBack, HelpIcon, HeaderFooterPic
 from .serializers import AboutSerializer, NewsSerializer, HelpSerializer, OfferSerializer, \
-    ContactsSerializer, MainPageIconSerializer, AdvantagesSerializer, CallBackSerializer
+    ContactsSerializer, MainPageIconSerializer, AdvantagesSerializer, CallBackSerializer, HeaderFooterPicSerializer
 from rest_framework import generics
 
 
@@ -32,6 +29,14 @@ class ContactView(generics.ListAPIView):
 
     queryset = Contacts.objects.all()
     serializer_class = ContactsSerializer
+
+
+class HeaderFooterView(generics.ListAPIView):
+    """view for show social pages, administration contacts
+    and picture for header and footer"""
+
+    queryset = HeaderFooterPic.objects.all()
+    serializer_class = HeaderFooterPicSerializer
 
 
 class MainPageView(generics.ListAPIView):

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from .views import AboutUsView, NewsView, OfferView, HelpView, \
-    ContactView, AdvantagesView, MainPageView, CallBackView, NewsViewDetail, HelpDetailView
+    ContactView, AdvantagesView, MainPageView, CallBackView, NewsViewDetail, HelpDetailView, HeaderFooterView
 
 urlpatterns = [
     path('about/', AboutUsView.as_view()),
@@ -13,5 +13,6 @@ urlpatterns = [
     path('advantages/', AdvantagesView.as_view()),
     path('slider/', MainPageView.as_view()),
     path('callback/', CallBackView.as_view()),
+    path('header/', HeaderFooterView.as_view()),
 
 ]

@@ -1,9 +1,10 @@
 from functools import update_wrapper
 
+from django.utils.html import format_html
 from django.views.generic import RedirectView
 
 from .models import AboutUs, News, Help, Offer, Contacts, MainPageIcon, Advantages, CallBack, \
-    HelpIcon
+    HelpIcon, HeaderFooterPic
 from django import forms
 from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
@@ -80,7 +81,7 @@ class OfferAdmin(AdminUrl):
 
 @admin.register(CallBack)
 class CallBackAdmin(admin.ModelAdmin):
-    list_display = ('name', 'reason', 'call_status', 'date')
+    list_display = ('name', 'phone_number', 'reason', 'call_status', 'date')
     list_filter = ('call_status', 'date')
     search_fields = ['name']
 
@@ -115,6 +116,36 @@ class ContactsAdmin(admin.ModelAdmin):
     class Meta:
         model = HelpIcon
 
+    def image_tag(self, obj):
+        return format_html('<img src="{}" width="auto" height="100px/>'.format(obj.icon.url))
+
+    image_tag.short_description = 'icon'
+    list_display = ['image_tag', ]
+
+    def has_add_permission(self, request):
+        if self.model.objects.count() >= 1:
+            return False
+        return super().has_add_permission(request)
+
+
+@admin.register(MainPageIcon)
+class ContactsAdmin(admin.ModelAdmin):
+
+    def image_tag(self, obj):
+        return format_html('<img src="{}" width="auto" height="100px/>'.format(obj.icon.url))
+
+    image_tag.short_description = 'icon'
+    list_display = ['image_tag', ]
+
+    def has_add_permission(self, request):
+        if self.model.objects.count() >= 1:
+            return False
+        return super().has_add_permission(request)
+
+
+@admin.register(HeaderFooterPic)
+class ContactsAdmin(AdminUrl):
+
     def has_add_permission(self, request):
         if self.model.objects.count() >= 1:
             return False
@@ -122,5 +153,4 @@ class ContactsAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Help)
-admin.site.register(MainPageIcon)
 admin.site.register(Advantages)
