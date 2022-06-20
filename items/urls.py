@@ -2,8 +2,8 @@ from django.urls import path, include
 from .views import CollectionAPIView, CollectionListView, ItemAPIView, \
     ItemListView, APIBasketCreateView, APIBasketDeleteAllView, APIAddBasketView, \
     APIBasketTotalPriceView, OrderCreateView, SameItemListView, \
-    ItemFavouriteUpdateView, ItemRandomView, DeleteOneAmountBasketView, DeleteByPKBasketView, OrderListView, \
-    OrderDetailView, NoveltyItemView
+    ItemRandomView, DeleteOneAmountBasketView, DeleteByPKBasketView, OrderListView, \
+    OrderDetailView, NoveltyItemView, UserFavouriteList, UserFavouriteCreate, ItemFavoriteDestroyByItemView
 
 urlpatterns = [
     path('', ItemListView.as_view(), name='items-list'),
@@ -11,10 +11,11 @@ urlpatterns = [
     path('collections/', CollectionListView.as_view(), name='collections-list'),
     path('collections/<int:pk>/', CollectionAPIView.as_view(), name='collection-detail'),
     path('same/', SameItemListView.as_view(), name='same'),
-    path('favourite/<int:pk>/', ItemFavouriteUpdateView.as_view()),
     path('random/', ItemRandomView.as_view()),
     path('novelty/', NoveltyItemView.as_view()),
-
+    path('favourite/', UserFavouriteList.as_view()),
+    path('favourite/create/', UserFavouriteCreate.as_view()),
+    path('favourite/delete/', ItemFavoriteDestroyByItemView.as_view()),
 ]
 
 basket_order_url = [

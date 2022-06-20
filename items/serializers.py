@@ -1,9 +1,10 @@
 from colorfield.serializers import ColorField
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import CurrentUserDefault
 
-
-from .models import Collection, Item, ItemImageColor, ItemCart, Order, OrderItem
+from .models import Collection, Item, ItemImageColor, ItemCart, Order, OrderItem, UserFavouriteItems
 
 
 class CollectionGetSerializer(serializers.ModelSerializer):
@@ -82,31 +83,8 @@ class ItemsListSerializer(serializers.ModelSerializer):
             'itemimage',
             'collection',
             'size_range',
-            'is_in_favourite',
         )
         read_only_fields = ('id',)
-
-
-class ItemsFavouriteSerializer(serializers.ModelSerializer):
-    """serializer for select one item to favourite"""
-    class Meta:
-        model = Item
-        exclude = ('date', 'is_novelty', 'is_in_cart', 'is_bestseller')
-        read_only_fields = (
-            'id',
-            'title',
-            'item_id',
-            'price',
-            'basic_price',
-            'description',
-            'size_range',
-            'material',
-            'compound',
-            'amount_in',
-            'itemimage',
-            'collection',
-            'discount',
-        )
 
 
 class ItemsDetailSerializer(serializers.ModelSerializer):
@@ -144,18 +122,7 @@ class BasketCreateSerializer(serializers.ModelSerializer):
             'image',
         )
 
-        read_only_fields = ('id',)
-
-    def get_image_url(self, obj):
-        try:
-            request = self.context.get('context')
-            image_url = obj.image.path
-            print(self.context.get('context'))
-            return request.build_absolute_uri(image_url)
-        except AttributeError:
-            return None
-        except ValueError:
-            return None
+        read_only_fields = ('id', )
 
 
 class BasketSerializer(serializers.ModelSerializer):
@@ -210,7 +177,7 @@ class BasketListSerializer(serializers.ModelSerializer):
 
         )
 
-        read_only_fields = ('id', 'amount',)
+        read_only_fields = ('id', 'amount')
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -299,3 +266,39 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         exclude = ('agreement', )
+
+
+class UserFavouriteItemSerializer(serializers.ModelSerializer):
+    item = ItemsListSerializer()
+
+    class Meta:
+        model = UserFavouriteItems
+        fields = ('id', 'item', 'user')
+
+
+class UserFavouriteCreateSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserFavouriteItems
+        fields = ('id', 'item', 'user')
+
+    def get_user(self, obj):
+        user = self.context['context'].user.id
+        return user
+
+    @transaction.atomic
+    def create(self, validated_data):
+        request = self.context.get('context', None)
+        if request:
+            user = request.user
+        else:
+            raise serializers.ValidationError({'user': ('Пользователь не авторизовался')})
+
+        validated_data['user'] = user
+        print(validated_data)
+        favourite = UserFavouriteItems.objects.create(
+            **validated_data
+        )
+        return favourite
+

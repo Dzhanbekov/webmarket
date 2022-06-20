@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     #apps
     'items',
     'info',
+    'accounts',
 
     #libs
     'rest_framework',
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
     'ckeditor_uploader',
     'phonenumber_field',
     'django_filters',
+    'rest_framework_simplejwt',
 
 ]
 
@@ -88,11 +90,12 @@ REST_FRAMEWORK = {
 
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
-
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    # 'DEFAULT_AUTHENTICATION_CLASSES': [
+    #     'accounts.auth.FirebaseAuthentication',
+    #     # 'rest_framework_simplejwt.authentication.JWTAuthentication',
+    # ]
 }
-
-
 
 
 # Database
