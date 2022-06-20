@@ -1,4 +1,4 @@
-from .models import Collection, Item, ItemImageColor, ItemCart, Order, OrderItem
+from .models import Collection, Item, ItemImageColor, ItemCart, Order, OrderItem, UserFavouriteItems
 from django import forms
 from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
@@ -39,6 +39,12 @@ class ItemAdmin(admin.ModelAdmin):
 class CollectionAdmin(admin.ModelAdmin):
     list_display = ['id', 'name']
     list_display_links = ['id', 'name']
+
+
+@admin.register(UserFavouriteItems)
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'item', 'user']
+    list_display_links = ['id', 'item']
 
 
 @admin.register(ItemCart)

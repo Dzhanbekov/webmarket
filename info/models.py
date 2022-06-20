@@ -79,11 +79,23 @@ class Offer(models.Model):
         verbose_name_plural = 'Публичная Оферта'
 
 
+class HeaderFooterPic(models.Model):
+    header = models.ImageField(upload_to='header')
+    footer = models.ImageField(upload_to='footer')
+    title = models.CharField(max_length=200, verbose_name='Заголовок')
+    phone_number = PhoneNumberField(verbose_name='Номер телефона', unique=False)
+
+    def __str__(self):
+        return f'инфо для хедера, {self.title}'
+
+    class Meta:
+        verbose_name = 'Хеадер Футер'
+        verbose_name_plural = 'Хеадер Футер'
+
+
 class Contacts(models.Model):
     """model for footer information"""
 
-    header = models.ImageField(upload_to='header')
-    footer = models.ImageField(upload_to='footer')
     email = models.EmailField(max_length=150, verbose_name='Электронная почта')
     phone_number = PhoneNumberField(verbose_name='Номер телефона', unique=False)
     phone_number_2 = PhoneNumberField(verbose_name='Номер телефона 2', unique=False)

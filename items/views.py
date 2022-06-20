@@ -4,15 +4,17 @@ from django.shortcuts import render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, mixins
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import filters
-from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView, RetrieveAPIView
 
-from .models import Collection, Item, ItemCart, Order, OrderItem
+from .models import Collection, Item, ItemCart, Order, OrderItem, UserFavouriteItems
 from .serializers import CollectionGetSerializer, ItemsDetailSerializer, \
     ItemsListSerializer, BasketSerializer, BasketListSerializer, \
-    BasketCreateSerializer, OrderSerializer, ItemsFavouriteSerializer, OrderListSerializer, OrderDetailSerializer
+    BasketCreateSerializer, OrderSerializer, OrderListSerializer, OrderDetailSerializer, \
+    UserFavouriteItemSerializer, UserFavouriteCreateSerializer
 
 
 class CustomPagination(PageNumberPagination):
@@ -32,18 +34,6 @@ class CollectionListView(ListAPIView):
 
     def get_serializer_context(self):
         context = super(CollectionListView, self).get_serializer_context()
-        context.update({"context": self.request})
-        return context
-
-
-class ItemFavouriteUpdateView(UpdateAPIView):
-    """view for add item to favourite"""
-
-    queryset = Item.objects.all()
-    serializer_class = ItemsFavouriteSerializer
-
-    def get_serializer_context(self):
-        context = super(ItemFavouriteUpdateView, self).get_serializer_context()
         context.update({"context": self.request})
         return context
 
@@ -78,7 +68,7 @@ class ItemListView(ListAPIView):
     queryset = Item.objects.all().order_by('-id')
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['collection', 'is_bestseller', 'is_novelty', 'is_in_favourite']
+    filterset_fields = ['collection', 'is_bestseller', 'is_novelty',]
     search_fields = ['title', 'collection__name']
 
     def get_serializer_context(self):
@@ -131,7 +121,6 @@ class APIBasketCreateView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(
             data=request.data, context={'context': request})
-
         serializer.is_valid(raise_exception=True)
         serializer.save()
         headers = self.get_success_headers(serializer.data)
@@ -140,6 +129,7 @@ class APIBasketCreateView(CreateAPIView):
 
 class APIBasketDeleteAllView(APIView):
     """delete all basket"""
+    permission_classes = (IsAuthenticated,)
 
     def delete(self, request, *args, **kwargs):
         ItemCart.objects.all().delete()
@@ -224,6 +214,7 @@ class APIBasketTotalPriceView(APIView):
     """view for show total item price before and after discount in basket,
         sum of discount, total item quantity and total item quantity line in basket
     """
+
     def get(self, request, *args, **kwargs):
         total_before = ItemCart.get_total_price_of_item_before_discount()
         total_after = ItemCart.get_total_price_of_item_after_discount()
@@ -276,7 +267,7 @@ class ItemRandomView(APIView):
 
 class OrderListView(ListAPIView):
     """view for get list order"""
-
+    permission_classes = (IsAuthenticated, )
     serializer_class = OrderListSerializer
     queryset = Order.objects.all()
 
@@ -291,3 +282,42 @@ class OrderDetailView(RetrieveAPIView):
         context = super(OrderDetailView, self).get_serializer_context()
         context.update({"context": self.request})
         return context
+
+
+class UserFavouriteList(ListAPIView):
+    serializer_class = UserFavouriteItemSerializer
+    queryset = UserFavouriteItems.objects.order_by('-id')
+
+    def get_queryset(self):
+        user = self.request.user
+        return UserFavouriteItems.objects.filter(user=user)
+
+    def get_serializer_context(self):
+        context = super(UserFavouriteList, self).get_serializer_context()
+        context.update({"context": self.request})
+        return context
+
+
+class UserFavouriteCreate(CreateAPIView):
+    serializer_class = UserFavouriteCreateSerializer
+    queryset = UserFavouriteItems.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        return UserFavouriteItems.objects.filter(user=user)
+
+    def get_serializer_context(self):
+        context = super(UserFavouriteCreate, self).get_serializer_context()
+        context.update({"context": self.request})
+        return context
+
+
+class ItemFavoriteDestroyByItemView(APIView):
+    queryset = UserFavouriteItems.objects.all()
+
+    def post(self, request):
+        item = UserFavouriteItems.objects.get(item__id=request.data.get('item_id'))
+        item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+

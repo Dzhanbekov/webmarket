@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/item/', include('items.urls')),
     path('api/v1/info/', include('info.urls')),
+    path('api/v1/user/', include('accounts.urls')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
 
     #swagger

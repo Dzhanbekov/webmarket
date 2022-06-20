@@ -1,6 +1,14 @@
 from rest_framework import serializers
 from .models import AboutUs, News, Help, Offer, Contacts, Advantages, MainPageIcon, CallBack,\
-    HelpIcon
+    HelpIcon, HeaderFooterPic
+
+
+class HeaderFooterPicSerializer(serializers.ModelSerializer):
+    """serialilzer for callback"""
+
+    class Meta:
+        model = HeaderFooterPic
+        fields = '__all__'
 
 
 class CallBackSerializer(serializers.ModelSerializer):

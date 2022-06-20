@@ -16,7 +16,8 @@ def validate_slash(value):
             and int(one) <= int(two):
         return value
     else:
-        raise ValidationError("this field must be, for example 44-50")
+        raise ValidationError("this field must start with small number and \
+                                between numbers put '-', for example 44-50")
 
 
 class Collection(models.Model):
@@ -46,7 +47,6 @@ class Item(models.Model):
     amount_in = models.PositiveIntegerField('количество в линейке', default=0, blank=True)
     compound = models.CharField(max_length=200, verbose_name='Состав Ткани')
     material = models.CharField(max_length=200, verbose_name='Материал')
-    is_in_cart = models.BooleanField(default=False, blank=True, null=True)
     is_in_favourite = models.BooleanField(default=False, verbose_name='избранное?', blank=True, null=True)
     is_novelty = models.BooleanField(default=False, blank=True, null=True, verbose_name='новинка?')
     is_bestseller = models.BooleanField(default=False, blank=True, null=True, verbose_name='хит продаж?')
@@ -143,7 +143,7 @@ class OrderItem(models.Model):
     item = models.ForeignKey(Item, verbose_name="товар", on_delete=models.CASCADE, related_name='itemorder')
     title = models.CharField(verbose_name="описание", max_length=200)
     order = models.ForeignKey(Order, verbose_name="Заказ", on_delete=models.CASCADE, related_name='orderitem')
-    image = models.ForeignKey(ItemImageColor, verbose_name="Фото", on_delete=models.CASCADE, null=True)
+    image = models.ForeignKey(ItemImageColor, verbose_name="Фото", on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.item} - {self.order}'
@@ -153,14 +153,28 @@ class OrderItem(models.Model):
         verbose_name_plural = "Заказанные товары"
 
 
+class UserFavouriteItems(models.Model):
+    """Model for user favourite items"""
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='fav_items')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ['item', 'user']
+        verbose_name = 'Избранные товары'
+        verbose_name_plural = 'избранные товары'
+
+    def __str__(self):
+        return f'{self.user} - {self.item}'
+
+
 class ItemCart(models.Model):
     """model basket for products"""
 
-    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="order_item", verbose_name="Продукт",  blank=True, null=True)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="order_item", verbose_name="Продукт")
     amount = models.PositiveIntegerField(default=1, verbose_name="Количество линеек", blank=True, null=True)
     amount_item = models.PositiveIntegerField(default=0, verbose_name='количество товаров', blank=True, null=True)
     price = models.PositiveIntegerField(verbose_name='цена', default=0, blank=True, null=True)
-    image = models.ForeignKey(ItemImageColor, on_delete=models.CASCADE, verbose_name='цвет', blank=True, null=True)
+    image = models.ForeignKey(ItemImageColor, on_delete=models.CASCADE, verbose_name='цвет')
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
@@ -179,7 +193,7 @@ class ItemCart(models.Model):
            in basket before discount"""
 
         total = 0
-        for orderitem in ItemCart.objects.all():
+        for orderitem in ItemCart.objects.filter():
             total += orderitem.item.basic_price * orderitem.amount
         return total
 
